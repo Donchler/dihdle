@@ -734,9 +734,9 @@ function showResult() {
   }).join('');
   // "Hard territory" = the HARD end of the bar: the target's length (practice: the grower line).
   const hardAt = growerAt(puzzle.max), half = 3 + (hardAt - 3) / 2;
-  const arc = len >= hardAt ? 'Started soft, but finished hard.'
-    : len >= half ? 'Started soft, finished semi-hard.'
-    : 'Started soft, stayed soft.';
+  const arc = len >= hardAt ? 'Started soft, finished hard.'
+    : len >= half ? 'Busted early.'
+    : "Couldn't get it up.";
   $('r-detail').textContent = `${arc} 3 → ${len} letters · grew ${(len / 3).toFixed(1)}×`
     + (S.girth.length ? ` · girth ${S.girth.length}` : '');
   const lastedMs = S.t0 && S.t1 ? S.t1 - S.t0 : null;
