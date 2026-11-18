@@ -99,6 +99,10 @@
     flex: 1; height: 40px; border-radius: 10px; border: 2px solid var(--ink); background: #fff;
     font-weight: 700; font-size: 14px; color: var(--ink); cursor: pointer;
   }
+  .controls button { white-space: nowrap; padding: 0 6px; font-size: clamp(12px, 3.6vw, 14px); }
+  .controls #btn-hint { flex: 0.85; }
+  .controls #btn-back { flex: 1.45; }
+  .controls #btn-done { flex: 1; }
   .controls button:disabled { opacity: .35; cursor: default; }
   .controls button.armed { background: var(--red); color: #fff; border-color: var(--red); }
   .kb { display: flex; flex-direction: column; gap: 6px; user-select: none; }
@@ -241,8 +245,8 @@
     <div class="msg" id="msg"></div>
     <div class="controls">
       <button id="btn-hint">Help (3)</button>
-      <button id="btn-back">Pull out (1)</button>
-      <button id="btn-done">I'm done</button>
+      <button id="btn-back">Throw it Back (1)</button>
+      <button id="btn-done">Pull Out</button>
     </div>
     <div class="kb" id="kb"></div>
   </div>
@@ -255,7 +259,7 @@
   <ul>
     <li><b>Grow:</b> each new word uses <b>every letter</b> of the last word, <b>plus one</b>. Rearrange them however you like.</li>
     <li><b>The target:</b> a secret everyday object with a clue that sounds dirty. (It isn't.) Grow your word all the way into it. Letters you've got light up in the target.</li>
-    <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no happy ending. Pull out undoes one step, once.</li>
+    <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no happy ending. Throw it Back undoes one step, once. Pull Out ends your game.</li>
     <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter.</li>
     <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Help shows which letter to add; tap it again to see the word. You get 3 per day.</li>
   </ul>
@@ -526,7 +530,7 @@ function render(anim) {
   const hintedHere = S.hintFor === S.chain.length;
   $('btn-hint').textContent = hintedHere && S.hintWordFor !== S.chain.length ? `Show word (${S.hintsLeft})` : `Help (${S.hintsLeft})`;
   $('btn-hint').disabled = S.done || S.hintsLeft === 0 || S.hintWordFor === S.chain.length;
-  $('btn-back').textContent = `Pull out (${S.backupsLeft})`;
+  $('btn-back').textContent = `Throw it Back (${S.backupsLeft})`;
   $('btn-back').disabled = S.done || S.backupsLeft === 0 || S.chain.length < 2;
   $('btn-done').disabled = S.done;
   disarmDone();
@@ -652,14 +656,14 @@ function backUp() {
   if (S.done || S.backupsLeft <= 0 || S.chain.length < 2) return;
   S.chain.pop(); S.backupsLeft--; S.hintFor = null; typed = '';
   S.hinted = S.hinted.filter((i) => i < S.chain.length);
-  say(`Pulled out. Back to ${cur().toUpperCase()}.`); save(); render();
+  say(`Threw it back. You're at ${cur().toUpperCase()} again.`); save(); render();
 }
 let doneArmed = false, doneTimer;
-function disarmDone() { doneArmed = false; clearTimeout(doneTimer); const b = $('btn-done'); b.classList.remove('armed'); b.textContent = "I'm done"; }
+function disarmDone() { doneArmed = false; clearTimeout(doneTimer); const b = $('btn-done'); b.classList.remove('armed'); b.textContent = 'Pull Out'; }
 function callIt() {
   if (S.done) return;
   if (!doneArmed) {
-    doneArmed = true; const b = $('btn-done'); b.classList.add('armed'); b.textContent = 'Really done?';
+    doneArmed = true; const b = $('btn-done'); b.classList.add('armed'); b.textContent = 'Really pull out?';
     doneTimer = setTimeout(disarmDone, 3000); return;
   }
   finish();
