@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('dihdle:theme')||'peach'}catch(e){document.documentElement.dataset.theme='peach'}</script>
+<meta name="theme-color" content="#fff1ea">
+<title>Shower or Grower? · Dihdle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Themes: peach & eggplant (default) and after dark ---------- */
+  :root, [data-theme="peach"] {
+    --bg: #fff1ea; --card: #ffffff; --card-2: #f7e4da; --line: #ecd3c6; --line-strong: #c9a7b6;
+    --text: #3a1a4a; --text-soft: #8a6a8f;
+    --accent: #ff9e7a; --accent-ink: #5a1e0a;
+    --tile: #5b2a86; --tile-ink: #ffffff; --tile-soft: #eadcf2; --tile-soft-ink: #3a1a4a;
+    --girth: #5b2a86;
+    --good: #2e8b57; --good-bg: #d9f2e3; --bad: #d6455b; --bad-bg: #fbdde2;
+    --hint: #ffd36e; --hint-ink: #4a3000;
+    --key: #ffffff; --key-shadow: rgba(58, 26, 74, .18); --key-hl: #eadcf2;
+    --scrim: rgba(58, 26, 74, .45);
+    color-scheme: light;
+  }
+  [data-theme="dark"] {
+    --bg: #1e1430; --card: #2b1e44; --card-2: #3a2a57; --line: #3f2e5e; --line-strong: #6e5a92;
+    --text: #f6eeff; --text-soft: #a996c9;
+    --accent: #ff5fa2; --accent-ink: #3d0a22;
+    --tile: #6c4bd8; --tile-ink: #ffffff; --tile-soft: #3a2a57; --tile-soft-ink: #e3d6ff;
+    --girth: #c9b3ff;
+    --good: #5bd99a; --good-bg: #1f4a36; --bad: #ff6b81; --bad-bg: #4a1e2a;
+    --hint: #ffc56e; --hint-ink: #3d2600;
+    --key: #3a2a57; --key-shadow: rgba(0, 0, 0, .35); --key-hl: #4b3a72;
+    --scrim: rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+  :root { --radius: 12px; --app: min(100vw, 480px); --display: "Bricolage Grotesque", system-ui, sans-serif; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center; overscroll-behavior: none;
+    transition: background .25s, color .25s;
+  }
+  .app { width: var(--app); height: 100dvh; display: flex; flex-direction: column; padding: 10px 14px 8px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .brand { font-family: var(--display); line-height: 1; }
+  .brand b { font-weight: 800; font-size: 26px; letter-spacing: -0.5px; }
+  .brand span { display: block; font-size: 13px; font-weight: 600; color: var(--text-soft); margin-top: 3px; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--card);
+    color: var(--text); font-size: 16px; font-weight: 700; cursor: pointer; display: grid; place-items: center; padding: 0;
+  }
+
+  /* Clue card */
+  .clue { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); padding: 8px 10px 7px; margin-top: 8px; }
+  .clue-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .clue-top b { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-soft); }
+  .clue q { display: block; font-weight: 700; font-size: 15px; line-height: 1.3; margin: 2px 0 6px; quotes: "\201C" "\201D"; }
+  .course { font-size: 12px; font-weight: 700; margin-top: 5px; }
+  .course.on { color: var(--good); }
+  .course.off { color: var(--bad); }
+
+  /* Meter: slim pill */
+  .meter { margin: 8px 0 2px; }
+  .meter-top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: var(--text-soft); }
+  .meter-top strong { color: var(--text); font-size: 15px; }
+  .ruler { position: relative; height: 10px; margin-top: 6px; border-radius: 99px; background: var(--card-2); overflow: hidden; }
+  .ruler i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); border-radius: 99px; transition: width .35s cubic-bezier(.3,1.4,.6,1); }
+  .ruler b { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed var(--text-soft); opacity: .6; }
+  .scale { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--text-soft); margin-top: 3px; letter-spacing: .04em; }
+  .badge {
+    display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line-strong);
+    font-weight: 800; font-size: 12px; letter-spacing: .05em; background: var(--tile-soft); color: var(--tile-soft-ink);
+    transition: background .3s, transform .3s;
+  }
+  .badge.grower { background: var(--good-bg); color: var(--text); border-color: var(--good); }
+  .badge.flip { animation: flip .6s; }
+  @keyframes flip { 30% { transform: scale(1.35) rotate(-6deg); } 60% { transform: scale(.95) rotate(3deg); } }
+
+  /* Word tiles */
+  .ladder { flex: 1; overflow-y: auto; padding: 6px 0 4px; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+  .ladder .spacer { flex: 1; }
+  .row { display: flex; gap: 4px; justify-content: center; }
+  .tile {
+    --size: min(44px, calc((var(--app) - 40px) / var(--n) - 4px));
+    width: var(--size); height: var(--size); border-radius: 8px; display: grid; place-items: center;
+    font-family: var(--display); font-weight: 800; font-size: calc(var(--size) * .52); text-transform: uppercase;
+    border: 1px solid var(--line-strong); background: var(--card); color: var(--text);
+    transition: background .15s, opacity .15s, transform .15s;
+  }
+  .row.past .tile { --size: min(26px, calc((var(--app) - 40px) / var(--n) - 4px)); border-radius: 5px; border-color: var(--line); background: var(--card-2); color: var(--text-soft); }
+  .row.past .tile.added { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .row.past.hinted .tile.added { background: var(--hint); color: var(--hint-ink); border-color: var(--hint); }
+  .row.current .tile { background: var(--tile); color: var(--tile-ink); border-color: var(--tile); }
+  .row.current .tile.used { opacity: .3; transform: scale(.9); }
+  .row.input .tile { background: transparent; border: 1.5px dashed var(--line-strong); }
+  .row.input .tile.kept { background: var(--tile-soft); color: var(--tile-soft-ink); border-style: solid; border-color: var(--tile-soft); }
+  .row.input .tile.new { background: var(--accent); color: var(--accent-ink); border-style: solid; border-color: var(--accent); }
+  .row.input .tile.bad { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); border-style: solid; }
+  .row.target { justify-content: flex-start; }
+  .row.target .tile { --size: 24px; border-radius: 5px; font-size: 13px; background: var(--card-2); border: 1px dashed var(--line-strong); }
+  .row.target .tile.on { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); }
+  .row.target.solved .tile { background: var(--good-bg); color: var(--text); border: 1px solid var(--good); }
+  .row.shake { animation: shake .35s; }
+  @keyframes shake { 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+  .row.pop .tile { animation: pop .3s; }
+  @keyframes pop { 50% { transform: scale(1.12); } }
+  .label { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-soft); }
+  .girth { font-size: 12px; font-weight: 700; color: var(--girth); text-align: center; }
+  .ways { text-align: center; font-size: 12px; color: var(--text-soft); font-weight: 600; margin-top: 2px; }
+  .ways.tight { color: var(--bad); }
+  .msg { min-height: 20px; text-align: center; font-weight: 600; font-size: 14px; margin: 2px 0 4px; }
+  .msg.err { color: var(--bad); }
+  .msg.ok { color: var(--good); }
+
+  /* Controls + keyboard */
+  .controls { display: flex; gap: 8px; margin-bottom: 8px; }
+  .controls button {
+    height: 40px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--card); color: var(--text);
+    font-weight: 700; cursor: pointer; white-space: nowrap; padding: 0 6px; font-size: clamp(12px, 3.6vw, 14px);
+  }
+  .controls #btn-hint { flex: 1.3; }
+  .controls #btn-back { flex: 1.4; }
+  .controls #btn-done { flex: 0.95; }
+  .controls button:disabled { opacity: .4; cursor: default; }
+  .controls button.armed { background: var(--bad); color: #fff; border-color: var(--bad); }
+  .kb { display: flex; flex-direction: column; gap: 6px; user-select: none; }
+  .kb-row { display: flex; gap: 5px; justify-content: center; }
+  .key {
+    flex: 1; max-width: 42px; height: 50px; border-radius: 8px; border: none; background: var(--key);
+    box-shadow: 0 2px 0 var(--key-shadow); font-weight: 700; font-size: 17px; text-transform: uppercase; color: var(--text); cursor: pointer;
+  }
+  .key.wide { max-width: 66px; flex: 1.5; font-size: 13px; }
+  .key.enter { background: var(--accent); color: var(--accent-ink); }
+  .key:active { transform: translateY(2px); box-shadow: none; }
+  .key.in-word { background: var(--key-hl); }
+
+  /* Sheets */
+  .scrim { position: fixed; inset: 0; background: var(--scrim); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
+  .scrim.open { display: flex; }
+  .sheet {
+    width: var(--app); max-height: 92dvh; overflow-y: auto; background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-bottom: none; border-radius: 20px 20px 0 0; padding: 18px 18px 22px; animation: up .25s ease-out;
+  }
+  @keyframes up { from { transform: translateY(30px); opacity: 0; } }
+  .sheet h2 { font-family: var(--display); font-weight: 800; font-size: 26px; margin: 0 0 6px; }
+  .sheet h3 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-soft); margin: 16px 0 6px; }
+  .sheet p, .sheet li { font-size: 15px; }
+  .sheet ul { padding-left: 20px; margin: 6px 0; }
+  .example { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; }
+  .btn {
+    display: block; width: 100%; height: 48px; margin-top: 10px; border-radius: 12px; border: 1px solid var(--accent);
+    background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 16px; cursor: pointer;
+  }
+  .btn.secondary { background: var(--card); color: var(--text); border-color: var(--line-strong); }
+  .close { float: right; }
+  .sub { color: var(--text-soft); font-size: 14px; }
+  .verdict { font-family: var(--display); font-weight: 800; font-size: 38px; line-height: 1.05; }
+  .rating { font-size: 17px; font-weight: 700; margin: 6px 0 2px; }
+  .lasted {
+    display: inline-flex; flex-wrap: nowrap; align-items: baseline; gap: 6px; margin: 12px 0 2px; white-space: nowrap; padding: 8px 12px;
+    background: var(--accent); color: var(--accent-ink); border-radius: 12px; font-weight: 800; font-size: clamp(13px, 3.8vw, 15px);
+  }
+  .lasted b { font-family: var(--display); font-size: clamp(15px, 4.7vw, 20px); line-height: 1.2; white-space: nowrap; }
+  .bar { display: flex; gap: 3px; margin: 12px 0 2px; }
+  .bar i { flex: 1; height: 14px; border-radius: 4px; background: var(--card-2); }
+  .bar i.base { background: var(--tile); }
+  .bar i.gain { background: var(--good); }
+  .bar i.hint { background: var(--hint); }
+  .arc { font-size: 17px; font-weight: 800; margin: 10px 0 6px; }
+  .chips { display: flex; gap: 6px; }
+  .chip { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); min-width: 0; }
+  .chip small { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-soft); }
+  .chip b { font-size: 16px; }
+  .wide-tag { display: inline-block; margin-top: 8px; padding: 4px 12px; border: 1px solid var(--text); border-radius: 8px;
+    background: repeating-linear-gradient(-45deg, var(--accent) 0 12px, var(--card) 12px 24px); font-weight: 800; letter-spacing: .06em; }
+  .wide-tag span { background: var(--card); padding: 0 4px; }
+  .wide-note { font-size: 13px; color: var(--text-soft); margin-top: 4px; }
+  .chainlist { font-weight: 700; font-size: 14px; text-transform: uppercase; word-break: break-word; }
+  .chainlist span { color: var(--text-soft); font-weight: 400; }
+  details.routes { margin-top: 16px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--card); }
+  details.routes summary {
+    list-style: none; cursor: pointer; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text);
+  }
+  details.routes summary::-webkit-details-marker { display: none; }
+  details.routes summary::after { content: "Show"; font-size: 12px; letter-spacing: .04em; color: var(--girth); }
+  details.routes[open] summary::after { content: "Hide"; }
+  details.routes .routes-body { padding: 0 12px 12px; }
+  .map { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .lvl { display: flex; gap: 8px; align-items: flex-start; }
+  .lvl > b { width: 18px; text-align: right; color: var(--text-soft); font-size: 13px; padding-top: 3px; flex: none; }
+  .lvl > div { display: flex; flex-wrap: wrap; gap: 4px; }
+  .node { font-size: 12px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); text-transform: uppercase; }
+  .node.mine { background: var(--good-bg); border-color: var(--good); }
+  .node.off { background: var(--bad-bg); border-color: var(--bad); }
+  .node.goal { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .share-preview { white-space: pre-wrap; background: var(--card); border: 1px dashed var(--line-strong); border-radius: 10px; padding: 10px; font-size: 14px; margin-top: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); text-align: center; gap: 6px; }
+  .stats b { display: block; font-family: var(--display); font-size: 24px; }
+  .stats span { font-size: 11px; color: var(--text-soft); text-transform: uppercase; letter-spacing: .05em; }
+  .dist { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .dist div { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+  .dist span:first-child { width: 22px; text-align: right; color: var(--text-soft); }
+  .dist .fill { height: 20px; min-width: 22px; background: var(--tile-soft); color: var(--tile-soft-ink); border-radius: 4px; font-size: 12px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+  .dist .fill.today { background: var(--tile); color: var(--tile-ink); }
+  .loading { flex: 1; display: grid; place-items: center; color: var(--text-soft); font-weight: 600; text-align: center; }
+  .practice-tag { background: var(--tile-soft); color: var(--tile-soft-ink); border-radius: 99px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <div class="brand"><b>Dihdle</b><span id="subtitle">Shower or Grower?</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="icon-btn" id="btn-theme" aria-label="Switch to After Dark"></button>
+      <button class="icon-btn" id="btn-help" aria-label="How to play">?</button>
+      <button class="icon-btn" id="btn-stats" aria-label="Stats"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="9" width="3" height="7" rx="1" fill="currentColor"/><rect x="7.5" y="4" width="3" height="12" rx="1" fill="currentColor"/><rect x="13" y="7" width="3" height="9" rx="1" fill="currentColor"/></svg></button>
+    </div>
+  </header>
+  <div class="loading" id="loading">Warming up…</div>
+  <div id="game" style="display:none; flex:1; display:none; flex-direction:column; min-height:0">
+    <div class="clue" id="clue">
+      <div class="clue-top"><b>Grow it into…</b><b id="clue-len"></b></div>
+      <q id="clue-text"></q>
+      <div class="row target" id="target-row"></div>
+      <div class="course" id="course"></div>
+    </div>
+    <div class="meter">
+      <div class="meter-top"><span class="badge" id="badge">SHOWER</span><span><strong id="len">3</strong> letters · <span id="max-label">max</span> <strong id="max">–</strong></span></div>
+      <div class="ruler" id="ruler"><i id="ruler-fill"></i><b id="ruler-line"></b></div>
+      <div class="scale"><span>SOFT</span><span id="scale-mid">GROWER ZONE →</span><span id="scale-end">HARD</span></div>
+    </div>
+    <div class="ladder" id="ladder"></div>
+    <div class="msg" id="msg"></div>
+    <div class="controls">
+      <button id="btn-hint">Lend a Hand (3)</button>
+      <button id="btn-back">Throw it Back (1)</button>
+      <button id="btn-done">Pull Out</button>
+    </div>
+    <div class="kb" id="kb"></div>
+  </div>
+</div>
+
+<div class="scrim" id="m-help"><div class="sheet">
+  <button class="icon-btn close" data-close>✕</button>
+  <h2>Shower or Grower?</h2>
+  <p>Everyone starts with the same 3-letter word. <b>Showers</b> don't change much. <b>Growers</b> end up <i>much</i> bigger than they started.</p>
+  <ul>
+    <li><b>Grow:</b> each new word uses <b>every letter</b> of the last word, <b>plus one</b>. Rearrange them however you like.</li>
+    <li><b>The target:</b> a secret everyday object with a clue that sounds dirty. (It isn't.) Grow your word all the way into it. Letters you've got light up in the target.</li>
+    <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no happy ending. Throw it Back undoes one step, once. Pull Out ends your game.</li>
+    <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter.</li>
+    <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Lend a Hand shows which letter to slip in; tap it again and it shows you the word. You get 3 per day.</li>
+  </ul>
+  <div class="example" id="help-example"></div>
+  <p class="sub">Everyone gets the same start word. A new one drops at midnight UTC.</p>
+  <button class="btn" data-close>Let's see what you've got</button>
+</div></div>
+
+<div class="scrim" id="m-result"><div class="sheet">
+  <button class="icon-btn close" data-close>✕</button>
+  <div class="sub" id="r-title"></div>
+  <div class="verdict" id="r-verdict"></div>
+  <div class="rating" id="r-rating"></div>
+  <div id="r-wide" style="display:none"><div class="wide-tag"><span>WIDE LOAD</span></div><div class="wide-note" id="r-wide-note"></div></div>
+  <div class="lasted" id="r-lasted" style="display:none">You lasted <b id="r-lasted-time"></b></div>
+  <div class="bar" id="r-bar"></div>
+  <div id="r-detail"></div>
+  <h3>How you grew</h3>
+  <div class="chainlist" id="r-chain"></div>
+  <details class="routes" id="r-map-wrap">
+    <summary id="r-map-title">Every route to the target</summary>
+    <div class="routes-body">
+      <div class="sub" id="r-map-sub"></div>
+      <div class="map" id="r-map"></div>
+    </div>
+  </details>
+  <div id="r-best-wrap">
+    <h3>The full-length route</h3>
+    <div class="chainlist" id="r-best"></div>
+  </div>
+  <div class="share-preview" id="r-share"></div>
+  <button class="btn" id="btn-share">Copy result</button>
+  <button class="btn secondary" id="btn-practice">Practice a random word</button>
+  <p class="sub" id="r-next" style="text-align:center;margin-top:12px"></p>
+</div></div>
+
+<div class="scrim" id="m-stats"><div class="sheet">
+  <button class="icon-btn close" data-close>✕</button>
+  <h2>Stats</h2>
+  <div class="stats" id="stats"></div>
+  <h3>Final lengths</h3>
+  <div class="dist" id="dist"></div>
+  <button class="btn secondary" id="btn-practice2">Practice a random word</button>
+  <button class="btn secondary" id="btn-daily" style="display:none">Back to today's puzzle</button>
+</div></div>
+
+<script>
+// ---------- Config ----------
+const STARTS = __STARTS__;   // practice starts (no target)
+const DAILY = __DAILY__;     // daily puzzles: { start, target, clue }
+const EPOCH = Date.UTC(2026, 10, 18);   // Puzzle #1 = 2026-11-18 (UTC)
+const SHARE_URL = 'dihdle.last-axis-1605.chatgpt.site';
+const HINTS = 3, BACKUPS = 1;
+const DAY = 86400000;
+
+// ---------- Storage (may be unavailable) ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('sog2:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('sog2:' + k, JSON.stringify(v)); } catch {} },
+};
+
+// ---------- Dictionary ----------
+const AZ = 'abcdefghijklmnopqrstuvwxyz';
+const sig = (w) => [...w].sort().join('');
+const addLetter = (s, c) => { for (let i = 0; i < s.length; i++) if (s[i] > c) return s.slice(0, i) + c + s.slice(i); return s + c; };
+let WORDS = new Map();   // word -> isCommon
+const LEVEL = new Map(); // word -> SCOWL level (10 = most familiar)
+let SIGS = new Map();    // sig -> { common: [words], other: [words] }
+
+function loadWords(text) {
+  const lines = text.split('\n');
+  for (let i = 1; i < lines.length; i++) {
+    const [w, c] = lines[i].split(',');
+    if (!w) continue;
+    const lv = parseInt(c, 10) || 55;
+    LEVEL.set(w, lv);
+    const isC = lv <= 35;
+    WORDS.set(w, isC);
+    const s = sig(w);
+    let e = SIGS.get(s);
+    if (!e) SIGS.set(s, (e = { common: [], other: [] }));
+    (isC ? e.common : e.other).push(w);
+  }
+  for (const e of SIGS.values()) { e.common.sort((a, b) => LEVEL.get(a) - LEVEL.get(b)); e.other.sort((a, b) => LEVEL.get(a) - LEVEL.get(b)); }
+}
+const sigLevel = (s) => { const e = SIGS.get(s); return LEVEL.get(e.common[0] || e.other[0]); };
+const nextSigs = (s) => { const out = []; for (const c of AZ) { const t = addLetter(s, c); if (SIGS.has(t) && !out.includes(t)) out.push(t); } return out; };
+const depthMemo = new Map();
+function depth(s) {          // words in the longest chain starting at s (including s)
+  if (depthMemo.has(s)) return depthMemo.get(s);
+  let d = 1;
+  for (const t of nextSigs(s)) d = Math.max(d, 1 + depth(t));
+  depthMemo.set(s, d);
+  return d;
+}
+function bestNext(s) {       // deepest next step; prefer everyday words on ties
+  let best = null;
+  for (const t of nextSigs(s)) {
+    const cand = { t, d: depth(t), c: SIGS.get(t).common.length > 0 };
+    if (!best || cand.d > best.d || (cand.d === best.d && cand.c && !best.c)) best = cand;
+  }
+  return best;
+}
+const displayWord = (s) => { const e = SIGS.get(s); return (e.common[0] || e.other[0]); };
+const addedLetter = (from, to) => { const a = [...to]; for (const c of from) a.splice(a.indexOf(c), 1); return a[0]; };
+function fullChain(startWord) {
+  const out = [startWord]; let s = sig(startWord);
+  for (let b = bestNext(s); b; b = bestNext(b.t)) out.push(displayWord(b.t));
+  return out;
+}
+
+// ---------- Target helpers ----------
+const isSub = (a, b) => { const r = [...b]; for (const ch of a) { const i = r.indexOf(ch); if (i < 0) return false; r.splice(i, 1); } return true; };
+const reachMemo = new Map();
+function reaches(s, T) {     // can sig s grow into target sig T?
+  const k = s + '|' + T;
+  if (reachMemo.has(k)) return reachMemo.get(k);
+  let ok = s === T;
+  if (!ok && s.length < T.length && isSub(s, T)) ok = nextSigs(s).some((t) => isSub(t, T) && reaches(t, T));
+  reachMemo.set(k, ok);
+  return ok;
+}
+function routeMap(start, T) {
+  const levels = {}, seen = new Set(), cnt = new Map();
+  const steps = (s) => nextSigs(s).filter((t) => isSub(t, T) && reaches(t, T));
+  const count = (s) => { if (s === T) return 1; if (cnt.has(s)) return cnt.get(s); const n = steps(s).reduce((a, t) => a + count(t), 0); cnt.set(s, n); return n; };
+  const walk = (s) => { if (seen.has(s)) return; seen.add(s); (levels[s.length] = levels[s.length] || []).push(s); if (s !== T) steps(s).forEach(walk); };
+  const s0 = sig(start); walk(s0);
+  return { levels, routes: count(s0) };
+}
+const tSig = () => sig(puzzle.target);
+const onCourse = () => !!puzzle.target && reaches(sig(cur()), tSig());
+const goalLen = () => (puzzle.target ? puzzle.target.length : puzzle.max);
+const anagramsLeft = (w) => SIGS.get(sig(w)).common.filter((x) => x !== w && !S.girth.includes(x));
+const girthLeft = () => S.chain.map((w) => [w, anagramsLeft(w).length]).filter(([, n]) => n > 0);
+const GIRTH_LINES = ['Thicc.', 'Girthy.', 'Wider, not longer.', "Now that's girth.", 'Built like a soda can.'];
+
+// ---------- Puzzle selection ----------
+const todayIndex = () => Math.floor((Date.now() - EPOCH) / DAY);
+let mode = 'daily';          // 'daily' | 'practice'
+let puzzle;                  // { id, no, start, max }
+function pickDaily(idx = todayIndex()) {
+  const m = location.hash.match(/^#p(\d+)$/);   // #p12 jumps to puzzle 12 for playtesting
+  if (m) idx = parseInt(m[1], 10) - 1;
+  const d = DAILY[((idx % DAILY.length) + DAILY.length) % DAILY.length];
+  return { id: 'd' + idx, idx, no: idx + 1, start: d.start, target: d.target, clue: d.clue, max: depth(sig(d.start)) + 2 };
+}
+function pickPractice() {
+  const start = STARTS[Math.floor(Math.random() * STARTS.length)];
+  return { id: 'practice', no: null, start, target: null, max: depth(sig(start)) + 2 };
+}
+
+// ---------- State ----------
+let S;   // { chain, hinted: [stepIdx], hintsLeft, backupsLeft, done, t0, t1, hintFor }
+let typed = '';
+function newState() { return { chain: [puzzle.start], hinted: [], hintsLeft: HINTS, backupsLeft: BACKUPS, done: false, t0: null, t1: null, hintFor: null, girth: [], hit: false }; }
+function save() { if (mode === 'daily') store.set(puzzle.id, S); }
+function cur() { return S.chain[S.chain.length - 1]; }
+
+// ---------- Shower / Grower ----------
+// Target puzzles: grower = reach the target's length. Practice: halfway from 3 letters to the max.
+const growerAt = (max) => (puzzle && puzzle.target ? puzzle.target.length : 3 + Math.ceil((max - 3) / 2));
+function verdict(len, max) {
+  const g = growerAt(max);
+  if (S && S.hit) return { grower: true, title: 'GROWER · HAPPY ENDING', line: `It was ${puzzle.target.toUpperCase()} all along.` };
+  if (len >= max) return { grower: true, title: 'CERTIFIED GROWER', line: 'Went the full length. Legendary.' };
+  if (len >= g) return { grower: true, title: 'GROWER', line: puzzle.target ? 'Missed the target, but that is some impressive length.' : 'Respectable growth. Be proud.' };
+  if ((len - 3) / (g - 3) >= 0.5) return { grower: false, title: 'SHOWER', line: 'Some change, but not a dramatic one.' };
+  return { grower: false, title: 'SHOWER', line: 'What you see is pretty much what you get.' };
+}
+const REACTIONS = ["It's a start.", "Something's happening…", 'Getting bigger.', 'Now we\'re talking.', 'Okay, show-off.', 'Is that even legal?', 'Absolute unit.', 'Somebody stop them.', 'Seek medical attention.'];
+
+// ---------- Rendering ----------
+const $ = (id) => document.getElementById(id);
+function tiles(word, cls = '', extra = {}) {
+  const row = document.createElement('div');
+  row.className = 'row ' + cls;
+  row.style.setProperty('--n', Math.max(word.length, 6));
+  [...word].forEach((ch, i) => {
+    const t = document.createElement('div');
+    t.className = 'tile' + (extra.classes ? ' ' + (extra.classes[i] || '') : '');
+    t.textContent = ch.trim();
+    row.appendChild(t);
+  });
+  return row;
+}
+function render(anim) {
+  const L = $('ladder'); L.innerHTML = '';
+  const sp = document.createElement('div'); sp.className = 'spacer'; L.appendChild(sp);
+  const c = cur();
+  // past words (all but current), highlighting the letter that was added
+  S.chain.forEach((w, i) => {
+    if (i === S.chain.length - 1) return;
+    const prev = S.chain[i - 1];
+    const add = prev ? addedLetter(prev, w) : null;
+    let marked = false;
+    const classes = [...w].map((ch) => (!marked && ch === add ? ((marked = true), 'added') : ''));
+    L.appendChild(tiles(w, 'past' + (S.hinted.includes(i) ? ' hinted' : ''), { classes }));
+  });
+  // current word, dimming letters as they're typed
+  const pool = [...c]; const used = new Array(c.length).fill(false);
+  const inputClasses = [];
+  let newCount = 0;
+  for (const ch of typed) {
+    const j = pool.findIndex((p, k) => p === ch && !used[k]);
+    if (j >= 0) { used[j] = true; inputClasses.push('kept'); }
+    else { newCount++; inputClasses.push(newCount === 1 ? 'new' : 'bad'); }
+  }
+  const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = S.done ? 'Final word' : 'Current word';
+  L.appendChild(lbl);
+  if (!S.done) {
+    const left = girthLeft();
+    if (left.length || S.girth.length) {
+      const g = document.createElement('div'); g.className = 'girth';
+      g.textContent = `Girth: ${S.girth.length}` + (left.length ? ` · left: ${left.map(([w, n]) => `${n} in ${w.toUpperCase()}`).join(', ')}` : '');
+      L.appendChild(g);
+    }
+  }
+  const curRow = tiles(c, 'current' + (anim === 'pop' ? ' pop' : ''), { classes: used.map((u) => (u ? 'used' : '')) });
+  L.appendChild(curRow);
+  if (!S.done) {
+    const lbl2 = document.createElement('div'); lbl2.className = 'label'; lbl2.textContent = 'Add one letter';
+    L.appendChild(lbl2);
+    const slots = (typed + ' '.repeat(Math.max(0, c.length + 1 - typed.length)));
+    const inRow = tiles(slots, 'input' + (anim === 'shake' ? ' shake' : ''), { classes: inputClasses });
+    inRow.id = 'input-row';
+    L.appendChild(inRow);
+    const n = nextSigs(sig(c)).length;
+    const ways = document.createElement('div');
+    ways.className = 'ways' + (n <= 2 ? ' tight' : '');
+    ways.textContent = n === 1 ? 'Only 1 way to grow from here' : `${n} ways to grow from here`;
+    L.appendChild(ways);
+  }
+  L.scrollTop = L.scrollHeight;
+  // clue card
+  $('clue').style.display = puzzle.target ? 'block' : 'none';
+  if (puzzle.target) {
+    const T = puzzle.target, reveal = new Array(T.length).fill('');
+    if (S.done) [...T].forEach((ch, i) => (reveal[i] = ch));
+    else for (const ch of cur()) for (let i = 0; i < T.length; i++) if (!reveal[i] && T[i] === ch) { reveal[i] = ch; break; }
+    $('clue-text').textContent = puzzle.clue;
+    $('clue-len').textContent = `${T.length} letters`;
+    const tr = $('target-row'); tr.innerHTML = '';
+    tr.className = 'row target' + (S.done ? ' solved' : '');
+    reveal.forEach((ch) => { const t = document.createElement('div'); t.className = 'tile' + (ch ? ' on' : ''); t.textContent = ch; tr.appendChild(t); });
+    const co = $('course');
+    if (S.hit) { co.className = 'course on'; co.textContent = 'Happy ending!'; }
+    else if (S.done) { co.className = 'course off'; co.textContent = `It was ${T.toUpperCase()}.`; }
+    else if (onCourse()) { co.className = 'course on'; co.textContent = 'On course: the target is still within reach'; }
+    else { co.className = 'course off'; co.textContent = 'Off course: the target is out of reach. Keep growing anyway.'; }
+  }
+  // meter
+  $('len').textContent = c.length;
+  $('max').textContent = puzzle.target ? goalLen() : puzzle.max;
+  $('max-label').textContent = puzzle.target ? 'target' : 'max';
+  const v = verdict(c.length, puzzle.max), badge = $('badge');
+  const wasGrower = badge.classList.contains('grower');
+  badge.textContent = S.hit ? 'HAPPY ENDING' : v.grower ? (c.length >= puzzle.max ? 'FULL LENGTH' : 'GROWER') : 'SHOWER';
+  badge.classList.toggle('grower', v.grower);
+  if (anim === 'pop' && (v.grower !== wasGrower || S.hit)) { badge.classList.remove('flip'); void badge.offsetWidth; badge.classList.add('flip'); }
+  $('ruler-line').style.display = puzzle.target ? 'none' : 'block';
+  $('ruler-line').style.left = ((growerAt(puzzle.max) - 0.5) / puzzle.max * 100) + '%';
+  $('scale-mid').textContent = puzzle.target ? '' : v.grower ? 'GROWER ZONE ✓' : `GROWER AT ${growerAt(puzzle.max)} →`;
+  $('scale-end').textContent = 'HARD';
+  $('ruler').style.setProperty('--tick', `calc(100% / ${goalLen()})`);
+  requestAnimationFrame(() => { $('ruler-fill').style.width = Math.min(100, c.length / goalLen() * 100) + '%'; });
+  // controls
+  const hintedHere = S.hintFor === S.chain.length;
+  $('btn-hint').textContent = hintedHere && S.hintWordFor !== S.chain.length ? `Show Me (${S.hintsLeft})` : `Lend a Hand (${S.hintsLeft})`;
+  $('btn-hint').disabled = S.done || S.hintsLeft === 0 || S.hintWordFor === S.chain.length;
+  $('btn-back').textContent = `Throw it Back (${S.backupsLeft})`;
+  $('btn-back').disabled = S.done || S.backupsLeft === 0 || S.chain.length < 2;
+  $('btn-done').disabled = S.done;
+  disarmDone();
+  // keyboard highlight letters in current word
+  document.querySelectorAll('.key[data-k]').forEach((k) => k.classList.toggle('in-word', c.includes(k.dataset.k)));
+  $('subtitle').innerHTML = mode === 'daily' ? `Shower or Grower? #${puzzle.no}` : 'Shower or Grower? <span class="practice-tag">PRACTICE</span>';
+}
+function say(text, kind = '') { const m = $('msg'); m.textContent = text; m.className = 'msg ' + kind; }
+
+// ---------- Keyboard ----------
+function buildKeyboard() {
+  const rows = ['qwertyuiop', 'asdfghjkl', '⏎zxcvbnm⌫'];
+  const kb = $('kb');
+  rows.forEach((r) => {
+    const row = document.createElement('div'); row.className = 'kb-row';
+    for (const ch of r) {
+      const b = document.createElement('button'); b.className = 'key';
+      if (ch === '⏎') { b.textContent = 'Enter'; b.classList.add('wide', 'enter'); b.onclick = submit; }
+      else if (ch === '⌫') { b.textContent = '⌫'; b.classList.add('wide'); b.onclick = backspace; }
+      else { b.textContent = ch; b.dataset.k = ch; b.onclick = () => type(ch); }
+      row.appendChild(b);
+    }
+    kb.appendChild(row);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || document.querySelector('.scrim.open')) return;
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+    else if (e.key === 'Backspace') backspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) type(e.key.toLowerCase());
+  });
+}
+function type(ch) {
+  if (S.done || typed.length >= cur().length + 1) return;
+  if (!S.t0) { S.t0 = Date.now(); save(); }
+  typed += ch; say(''); render();
+}
+function backspace() { if (S.done) return; typed = typed.slice(0, -1); render(); }
+
+// ---------- Game actions ----------
+function submit() {
+  if (S.done) return;
+  const c = cur();
+  if (typed.length <= c.length) {            // girth: an anagram of any word in your chain
+    const base = S.chain.find((w) => w.length === typed.length);
+    if (!base) return fail(`Your chain has no ${typed.length}-letter word to rearrange.`);
+    if (typed === base) return fail(`${base.toUpperCase()} is already in your chain. Rearrange it into a different word.`);
+    if (sig(typed) !== sig(base)) return fail(`For girth, rearrange the letters of ${base.toUpperCase()}.`);
+    if (!WORDS.has(typed)) return fail(`${typed.toUpperCase()} isn't in the dictionary.`);
+    if (S.girth.includes(typed)) return fail('Already found that one.');
+    S.girth.push(typed); typed = '';
+    say(`Girth +1 (${base.toUpperCase()} → ${S.girth[S.girth.length - 1].toUpperCase()}). ${GIRTH_LINES[(S.girth.length - 1) % GIRTH_LINES.length]}`, 'ok');
+    save(); return render('pop');
+  }
+  if (typed.length !== c.length + 1) return fail(`Too long. Add just one letter to ${c.toUpperCase()}.`);
+  const rest = [...typed];
+  for (const ch of c) { const i = rest.indexOf(ch); if (i < 0) return fail(`Use every letter in ${c.toUpperCase()}, plus one.`); rest.splice(i, 1); }
+  if (!WORDS.has(typed)) return fail(`${typed.toUpperCase()} isn't in the dictionary.`);
+  const step = S.chain.length;
+  const wasOn = onCourse();
+  if (S.hintFor === step) S.hinted.push(step);
+  S.hintFor = null;
+  S.chain.push(typed); typed = '';
+  const len = cur().length;
+  if (puzzle.target && sig(cur()) === tSig()) {
+    S.hit = true;
+    say(cur() === puzzle.target ? `Happy ending: ${puzzle.target.toUpperCase()}!` : `Right letters. It was ${puzzle.target.toUpperCase()}. Happy ending!`, 'ok');
+    return finish();
+  }
+  if (len >= puzzle.max) { say('Full length!', 'ok'); return finish(); }
+  if (wasOn && !onCourse()) { say("Off course. The target's out of reach now, but you can still grow.", 'err'); save(); return render('pop'); }
+  if (!nextSigs(sig(cur())).length) { say("That's as big as it gets from here.", 'err'); return finish(); }
+  if (len === growerAt(puzzle.max)) say("You're officially a grower.", 'ok');
+  else say(REACTIONS[Math.min(len - 4, REACTIONS.length - 1)] + (WORDS.get(cur()) ? '' : ' (Fancy word.)'), 'ok');
+  save(); render('pop');
+}
+function fail(text) { say(text, 'err'); render('shake'); }
+// Pick the most helpful next step: on course, the step with the most everyday-word routes
+// to the target; off course, an everyday word with the longest growth ahead.
+const routeMemo = new Map();
+function routesTo(s, T, commonOnly) {
+  const k = s + '|' + T + '|' + commonOnly;
+  if (routeMemo.has(k)) return routeMemo.get(k);
+  let n = 0;
+  if (s === T) n = 1;
+  else for (const t of nextSigs(s)) if (isSub(t, T) && (!commonOnly || SIGS.get(t).common.length)) n += routesTo(t, T, commonOnly);
+  routeMemo.set(k, n);
+  return n;
+}
+function hintStep() {
+  const s = sig(cur());
+  const isC = (t) => SIGS.get(t).common.length > 0;
+  let cands = [];
+  if (onCourse()) {
+    const T = tSig();
+    cands = nextSigs(s).filter((t) => isSub(t, T) && reaches(t, T))
+      .map((t) => ({ t, score: [t === T || (isC(t) && routesTo(t, T, true) > 0) ? 1 : 0, -sigLevel(t), routesTo(t, T, true), routesTo(t, T, false)] }));
+  }
+  if (!cands.length) cands = nextSigs(s).map((t) => ({ t, score: [isC(t) ? 1 : 0, -sigLevel(t), depth(t), 0] }));
+  cands.sort((a, b) => b.score[0] - a.score[0] || b.score[1] - a.score[1] || b.score[2] - a.score[2] || b.score[3] - a.score[3]);
+  return cands[0] ? cands[0].t : null;
+}
+function hint() {
+  if (S.done) return;
+  const step = S.chain.length;
+  const t = hintStep();
+  if (!t) return;
+  const L = addedLetter(sig(cur()), t);
+  const word = (puzzle.target && t === tSig()) ? puzzle.target : displayWord(t);
+  if (S.hintFor !== step) {                       // first tap: the letter
+    if (S.hintsLeft <= 0) return;
+    S.hintsLeft--; S.hintFor = step; save();
+    say(`Slip in ${'aefhilmnorsx'.includes(L) ? 'an' : 'a'} ${L.toUpperCase()}. Need more? Tap again.`, 'ok');
+  } else if (S.hintWordFor !== step) {            // second tap: the word
+    if (S.hintsLeft <= 0) return;
+    S.hintsLeft--; S.hintWordFor = step; save();
+    say(`Stick ${word.toUpperCase()} in there.`, 'ok');
+  } else {
+    say(`Stick ${word.toUpperCase()} in there.`, 'ok');
+  }
+  render();
+}
+function backUp() {
+  if (S.done || S.backupsLeft <= 0 || S.chain.length < 2) return;
+  S.chain.pop(); S.backupsLeft--; S.hintFor = null; typed = '';
+  S.hinted = S.hinted.filter((i) => i < S.chain.length);
+  say(`Threw it back. You're at ${cur().toUpperCase()} again.`); save(); render();
+}
+let doneArmed = false, doneTimer;
+function disarmDone() { doneArmed = false; clearTimeout(doneTimer); const b = $('btn-done'); b.classList.remove('armed'); b.textContent = 'Pull Out'; }
+function callIt() {
+  if (S.done) return;
+  if (!doneArmed) {
+    doneArmed = true; const b = $('btn-done'); b.classList.add('armed'); b.textContent = 'Really pull out?';
+    doneTimer = setTimeout(disarmDone, 3000); return;
+  }
+  finish();
+}
+function finish() {
+  S.done = true; S.t1 = Date.now(); typed = '';
+  S.wide = S.girth.length > cur().length;
+  if (mode === 'daily') recordStats();
+  save(); render();
+  setTimeout(showResult, 600);
+}
+
+// ---------- Stats ----------
+function recordStats() {
+  const st = store.get('stats', { played: 0, streak: 0, maxStreak: 0, best: 0, total: 0, last: null, full: 0, growers: 0, dist: {} });
+  st.dist = st.dist || {}; st.growers = st.growers || 0;
+  const idx = parseInt(puzzle.id.slice(1), 10);
+  if (st.last === idx) return;
+  st.played++; st.streak = st.last === idx - 1 ? st.streak + 1 : 1; st.maxStreak = Math.max(st.maxStreak, st.streak);
+  const len = cur().length; st.best = Math.max(st.best, len); st.total += len; st.last = idx;
+  if (len >= puzzle.max) st.full++;
+  if (verdict(len, puzzle.max).grower) st.growers++;
+  if (S.hit) st.hits = (st.hits || 0) + 1;
+  if (S.wide) st.wides = (st.wides || 0) + 1;
+  st.dist[len] = (st.dist[len] || 0) + 1;
+  store.set('stats', st);
+}
+function showStats() {
+  const st = store.get('stats', { played: 0, streak: 0, maxStreak: 0, best: 0, total: 0, full: 0, growers: 0, dist: {} });
+  const avg = st.played ? (st.total / st.played).toFixed(1) : '–';
+  const gp = st.played ? Math.round((st.growers || 0) / st.played * 100) + '%' : '–';
+  const hp = st.played ? Math.round((st.hits || 0) / st.played * 100) + '%' : '–';
+  const tiles = [['Played', st.played], ['Stamina<br>(streak)', st.streak], ['Grower<br>rate', gp], ['Happy<br>endings', hp]];
+  if (st.wides) tiles.push(['Wide<br>Loads', st.wides]);   // stays hidden until earned
+  $('stats').style.gridTemplateColumns = `repeat(${tiles.length}, 1fr)`;
+  $('stats').innerHTML = tiles
+    .map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('');
+  const dist = st.dist || {}; const keys = Object.keys(dist).map(Number);
+  const lo = 3, hi = Math.max(13, ...keys); const top = Math.max(1, ...Object.values(dist));
+  const todayLen = mode === 'daily' && S.done ? cur().length : null;
+  let html = '';
+  for (let L = lo; L <= hi; L++) {
+    const n = dist[L] || 0;
+    html += `<div><span>${L}</span><span class="fill${L === todayLen ? ' today' : ''}" style="width:${8 + (n / top) * 82}%">${n}</span></div>`;
+  }
+  $('dist').innerHTML = st.played ? html : '<p class="sub">Play a daily puzzle to start your chart.</p>';
+  $('btn-daily').style.display = mode === 'practice' ? 'block' : 'none';
+  open('m-stats');
+}
+
+// ---------- Result ----------
+const fmtTime = (ms) => {
+  const t = Math.max(0, Math.round(ms / 1000)), m = Math.floor(t / 60), sec = t % 60;
+  const secs = `${sec} second${sec === 1 ? '' : 's'}`;
+  if (!m) return secs;
+  return sec ? `${m} min and ${secs}` : `${m} min`;
+};
+function shareText() {
+  const len = cur().length, v = verdict(len, puzzle.max);
+  const bar = '🟪🟪🟪' + S.chain.slice(1).map((_, i) => (S.hinted.includes(i + 1) ? '🟨' : '🟩')).join('') + '⬜'.repeat(Math.max(0, goalLen() - len));
+  const girth = S.girth.length ? `\nGirth: ${S.girth.length}` : '';
+  const head = mode === 'daily' ? `Shower or Grower? #${puzzle.no}` : 'Shower or Grower? (practice)';
+  const time = S.t0 && S.t1 ? ` · lasted ${fmtTime(S.t1 - S.t0)}` : '';
+  return `${head}\n${v.title}${S.wide ? ' · WIDE LOAD' : ''} · 3 → ${len} letters${time}\n${bar}${girth}\n${SHARE_URL}`;
+}
+function showResult() {
+  const len = cur().length, v = verdict(len, puzzle.max);
+  $('r-title').textContent = mode === 'daily' ? `Shower or Grower? #${puzzle.no}` : 'Practice round';
+  $('r-verdict').textContent = v.title;
+  $('r-rating').textContent = v.line;
+  $('r-wide').style.display = S.wide ? 'block' : 'none';
+  $('r-wide-note').textContent = S.wide ? `Girth ${S.girth.length} on a ${len}-letter word. Wider than it is long.` : '';
+  $('r-bar').innerHTML = Array.from({ length: Math.max(len, goalLen()) }, (_, i) => {
+    if (i < 3) return '<i class="base"></i>';
+    if (i >= len) return '<i></i>';
+    return `<i class="${S.hinted.includes(i - 2) ? 'hint' : 'gain'}"></i>`;
+  }).join('');
+  // "Hard territory" = the HARD end of the bar: the target's length (practice: the grower line).
+  const hardAt = growerAt(puzzle.max), half = 3 + (hardAt - 3) / 2;
+  const arc = len >= hardAt ? 'Started soft, finished hard.'
+    : len >= half ? 'Busted early.'
+    : "Couldn't get it up.";
+  const chips = [['Length', `3 → ${len}`], ['Grew', `${(len / 3).toFixed(1)}×`]];
+  if (S.girth.length) chips.push(['Girth', S.girth.length]);
+  $('r-detail').innerHTML = `<div class="arc">${arc}</div><div class="chips">`
+    + chips.map(([k, v]) => `<div class="chip"><small>${k}</small><b>${v}</b></div>`).join('') + '</div>';
+  const lastedMs = S.t0 && S.t1 ? S.t1 - S.t0 : null;
+  $('r-lasted').style.display = lastedMs !== null ? 'inline-flex' : 'none';
+  $('r-lasted-time').textContent = lastedMs !== null ? fmtTime(lastedMs) : '';
+  const fmtChain = (arr) => arr.map((w) => w.toUpperCase()).join(' <span>→</span> ');
+  $('r-chain').innerHTML = fmtChain(S.chain);
+  $('r-best').innerHTML = fmtChain(fullChain(puzzle.start));
+  $('r-best-wrap').style.display = puzzle.target ? 'none' : 'block';
+  $('r-map-wrap').style.display = puzzle.target ? 'block' : 'none';
+  if (puzzle.target) renderMap();
+  $('r-share').textContent = shareText();
+  $('r-next').textContent = mode === 'daily' ? nextText() : '';
+  open('m-result');
+}
+function renderMap() {
+  const T = tSig(), { levels, routes } = routeMap(puzzle.start, T);
+  const mine = new Map(S.chain.map((w) => [w.length, w]));
+  let offShown = false, html = '';
+  for (let L = 3; L <= puzzle.target.length; L++) {
+    const lv = levels[L] || [], myW = mine.get(L);
+    const items = lv.map((s) => {
+      const e = SIGS.get(s), words = [...e.common, ...e.other].map((w) => w.toUpperCase()).join(' / ');
+      const cls = s === T ? 'goal' : myW && sig(myW) === s ? 'mine' : '';
+      return `<span class="node ${cls}">${words}</span>`;
+    });
+    if (myW && !lv.includes(sig(myW))) { items.push(`<span class="node off">${myW.toUpperCase()} ✗${offShown ? '' : ' you turned off here'}</span>`); offShown = true; }
+    html += `<div class="lvl"><b>${L}</b><div>${items.join('')}</div></div>`;
+  }
+  $('r-map').innerHTML = html;
+  $('r-map-title').textContent = `Every route to the target (${routes})`;
+  const rt = `${routes} route${routes === 1 ? '' : 's'} from ${puzzle.start.toUpperCase()} to ${puzzle.target.toUpperCase()}.`;
+  $('r-map-sub').textContent = S.hit ? `${rt} Yours is in green.` : offShown ? `${rt} Red is where you went off course.` : `${rt} You stopped at the green one.`;
+}
+function nextText() {
+  const ms = (todayIndex() + 1) * DAY + EPOCH - Date.now();
+  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+  const nd = DAILY[((puzzle.idx + 1) % DAILY.length + DAILY.length) % DAILY.length];
+  return `Tomorrow: a ${nd.target.length}-letter target. New clue in ${h}h ${m}m.`;
+}
+async function copyShare() {
+  const text = shareText(); const b = $('btn-share');
+  try { await navigator.clipboard.writeText(text); b.textContent = 'Copied!'; }
+  catch {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch {}
+    ta.remove(); b.textContent = ok ? 'Copied!' : 'Select the text above to copy';
+  }
+  setTimeout(() => (b.textContent = 'Copy result'), 1800);
+}
+
+// ---------- Modals ----------
+function open(id) { $(id).classList.add('open'); }
+function closeAll() { document.querySelectorAll('.scrim').forEach((s) => s.classList.remove('open')); }
+document.querySelectorAll('.scrim').forEach((s) => s.addEventListener('click', (e) => { if (e.target === s || e.target.closest('[data-close]')) closeAll(); }));
+
+// ---------- Theme ----------
+const MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+const SUN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('dihdle:theme', t); } catch {}
+  const b = $('btn-theme'); const dark = t === 'dark';
+  b.innerHTML = dark ? SUN : MOON;
+  b.setAttribute('aria-label', dark ? 'Switch to Peach' : 'Switch to After Dark');
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? '#1e1430' : '#fff1ea';
+}
+
+// ---------- Boot ----------
+function startPuzzle(p, m) {
+  mode = m; puzzle = p; typed = '';
+  S = (m === 'daily' && store.get(p.id, null)) || newState();
+  say(S.done ? 'Done for today. Come back tomorrow.' : `Start: ${puzzle.start.toUpperCase()}. Make it grow${puzzle.target ? ' into the target' : ''}.`);
+  render();
+  if (S.done) setTimeout(showResult, 300);
+}
+function helpExample() {
+  const ex = $('help-example'); ex.innerHTML = '';
+  ['ant', 'tans', 'stand', 'stands'].forEach((w, i) => ex.appendChild(tiles(w, i === 3 ? 'current' : 'past', { classes: [] })));
+}
+async function boot() {
+  try {
+    const res = await fetch('words.csv');
+    if (!res.ok) throw new Error(res.status);
+    loadWords(await res.text());
+  } catch (e) {
+    $('loading').textContent = "Couldn't load the dictionary (words.csv). Make sure it's next to this page.";
+    return;
+  }
+  $('loading').style.display = 'none';
+  $('game').style.display = 'flex';
+  buildKeyboard(); helpExample();
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'peach');
+  $('btn-theme').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'peach' : 'dark');
+  $('btn-help').onclick = () => open('m-help');
+  $('btn-stats').onclick = showStats;
+  $('btn-hint').onclick = hint;
+  $('btn-back').onclick = backUp;
+  $('btn-done').onclick = callIt;
+  $('btn-share').onclick = copyShare;
+  const practice = () => { closeAll(); startPuzzle(pickPractice(), 'practice'); };
+  $('btn-practice').onclick = practice;
+  $('btn-practice2').onclick = practice;
+  $('btn-daily').onclick = () => { closeAll(); startPuzzle(pickDaily(), 'daily'); };
+  window.addEventListener('hashchange', () => { closeAll(); startPuzzle(pickDaily(), 'daily'); });
+  startPuzzle(pickDaily(), 'daily');
+  if (!store.get('seenHelp', false)) { open('m-help'); store.set('seenHelp', true); }
+}
+boot();
+</script>
+</body>
+</html>

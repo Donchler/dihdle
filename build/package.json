@@ -1,0 +1,13 @@
+{
+  "name": "dihdle-build",
+  "private": true,
+  "description": "Build scripts for the Dihdle site",
+  "scripts": {
+    "site": "node make-site.js",
+    "dictionary": "node build-data.js",
+    "targets": "node targets.js"
+  },
+  "dependencies": {
+    "wordlist-english": "^2.0.0"
+  }
+}

@@ -1,0 +1,16 @@
+[
+  { "start": "art", "target": "toaster",  "clue": "Slide two in, get things hot, and wait for it to pop." },
+  { "start": "gel", "target": "plunger",  "clue": "Shove it in, pump it hard, and keep going until something finally comes out." },
+  { "start": "ace", "target": "candles",  "clue": "Long, hard, and they start dripping once things heat up." },
+  { "start": "set", "target": "rockets",  "clue": "Long, hard, and it's all over in seconds once they go off." },
+  { "start": "lad", "target": "ladders",  "clue": "Spread their legs, climb on, and try to make it all the way to the top." },
+  { "start": "ape", "target": "stapler",  "clue": "Push down hard until it goes all the way in." },
+  { "start": "gin", "target": "caulking", "clue": "Squeeze it slowly and fill every crack until it's oozing out." },
+  { "start": "lie", "target": "pickles",  "clue": "Long, bumpy, and they've been soaking wet for weeks." },
+  { "start": "sea", "target": "harness",  "clue": "Strap it on tight. It's going to be a wild ride." },
+  { "start": "ate", "target": "mattress", "clue": "Gets laid on every night and always ends up on its back." },
+  { "start": "nit", "target": "pistons",  "clue": "Pumping in and out, faster and faster, until things get hot." },
+  { "start": "pen", "target": "sponges",  "clue": "Squeeze them hard and they get wet all over." },
+  { "start": "gas", "target": "sausages", "clue": "Thick, juicy, and they always end up between buns." },
+  { "start": "ace", "target": "peaches",  "clue": "Soft, round, a little fuzzy, and you just want to squeeze them." }
+]
