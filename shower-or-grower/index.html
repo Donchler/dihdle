@@ -251,7 +251,7 @@
     <li><b>Grow:</b> each new word uses <b>every letter</b> of the last word, <b>plus one</b>. Rearrange them however you like.</li>
     <li><b>The target:</b> a secret everyday object with a clue that sounds dirty. (It isn't.) Grow your word all the way into it. Letters you've got light up in the target.</li>
     <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no happy ending. Pull out undoes one step, once.</li>
-    <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter. Finish with more girth than letters in your final word and you've got a <b>Wide Load</b>.</li>
+    <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter.</li>
     <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Help shows which letter to add; tap it again to see the word. You get 3 per day.</li>
   </ul>
   <div class="example" id="help-example"></div>
@@ -465,8 +465,7 @@ function render(anim) {
     const left = girthLeft();
     if (left.length || S.girth.length) {
       const g = document.createElement('div'); g.className = 'girth';
-      const need = c.length + 1, wl = S.girth.length >= need ? 'wide load secured' : `wide load at ${need}+`;
-      g.textContent = `Girth: ${S.girth.length} · ${wl}` + (left.length ? ` · left: ${left.map(([w, n]) => `${n} in ${w.toUpperCase()}`).join(', ')}` : '');
+      g.textContent = `Girth: ${S.girth.length}` + (left.length ? ` · left: ${left.map(([w, n]) => `${n} in ${w.toUpperCase()}`).join(', ')}` : '');
       L.appendChild(g);
     }
   }
@@ -688,7 +687,10 @@ function showStats() {
   const avg = st.played ? (st.total / st.played).toFixed(1) : '–';
   const gp = st.played ? Math.round((st.growers || 0) / st.played * 100) + '%' : '–';
   const hp = st.played ? Math.round((st.hits || 0) / st.played * 100) + '%' : '–';
-  $('stats').innerHTML = [['Played', st.played], ['Stamina<br>(streak)', st.streak], ['Grower<br>rate', gp], ['Happy<br>endings', hp], ['Wide<br>loads', st.wides || 0]]
+  const tiles = [['Played', st.played], ['Stamina<br>(streak)', st.streak], ['Grower<br>rate', gp], ['Happy<br>endings', hp]];
+  if (st.wides) tiles.push(['Wide<br>Loads', st.wides]);   // stays hidden until earned
+  $('stats').style.gridTemplateColumns = `repeat(${tiles.length}, 1fr)`;
+  $('stats').innerHTML = tiles
     .map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('');
   const dist = st.dist || {}; const keys = Object.keys(dist).map(Number);
   const lo = 3, hi = Math.max(13, ...keys); const top = Math.max(1, ...Object.values(dist));
