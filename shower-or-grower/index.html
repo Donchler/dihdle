@@ -193,11 +193,11 @@
   .wide-tag span { background: #fff; padding: 0 4px; }
   .wide-note { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
   .lasted {
-    display: inline-flex; align-items: baseline; gap: 8px; margin: 12px 0 2px; padding: 8px 14px;
+    display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 12px 0 2px; padding: 8px 14px;
     background: var(--yellow); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 0 3px 0 var(--ink);
     font-weight: 800; font-size: 16px;
   }
-  .lasted b { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 30px; line-height: 1; }
+  .lasted b { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 24px; line-height: 1.1; }
   details.routes { margin-top: 16px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; }
   details.routes summary {
     list-style: none; cursor: pointer; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;
@@ -706,7 +706,12 @@ function showStats() {
 }
 
 // ---------- Result ----------
-const fmtTime = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+const fmtTime = (ms) => {
+  const t = Math.max(0, Math.round(ms / 1000)), m = Math.floor(t / 60), sec = t % 60;
+  const secs = `${sec} second${sec === 1 ? '' : 's'}`;
+  if (!m) return secs;
+  return sec ? `${m} min and ${secs}` : `${m} min`;
+};
 function shareText() {
   const len = cur().length, v = verdict(len, puzzle.max);
   const bar = '🟪🟪🟪' + S.chain.slice(1).map((_, i) => (S.hinted.includes(i + 1) ? '🟨' : '🟩')).join('') + '⬜'.repeat(Math.max(0, goalLen() - len));
