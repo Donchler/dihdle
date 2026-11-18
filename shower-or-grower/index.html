@@ -232,8 +232,8 @@
     <li><b>Grow:</b> each new word uses <b>every letter</b> of the last word, <b>plus one</b>. Rearrange them however you like.</li>
     <li><b>The target:</b> a secret everyday object with a clue that sounds dirty. (It isn't.) Grow your word all the way into it. Letters you've got light up in the target.</li>
     <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no bullseye. Pull out undoes one step, once.</li>
-    <li><b>Girth:</b> rearrange your current word into a different word (same letters, same length) for bonus points. Grab them before you grow.</li>
-    <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Help shows which letter to add (3 per day).</li>
+    <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter.</li>
+    <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Help shows which letter to add; tap it again to see the word. You get 3 per day.</li>
   </ul>
   <div class="example" id="help-example"></div>
   <p class="sub">Everyone gets the same start word. A new one drops at midnight UTC.</p>
@@ -294,6 +294,7 @@ const AZ = 'abcdefghijklmnopqrstuvwxyz';
 const sig = (w) => [...w].sort().join('');
 const addLetter = (s, c) => { for (let i = 0; i < s.length; i++) if (s[i] > c) return s.slice(0, i) + c + s.slice(i); return s + c; };
 let WORDS = new Map();   // word -> isCommon
+const LEVEL = new Map(); // word -> SCOWL level (10 = most familiar)
 let SIGS = new Map();    // sig -> { common: [words], other: [words] }
 
 function loadWords(text) {
@@ -301,14 +302,18 @@ function loadWords(text) {
   for (let i = 1; i < lines.length; i++) {
     const [w, c] = lines[i].split(',');
     if (!w) continue;
-    const isC = c === '1';
+    const lv = parseInt(c, 10) || 55;
+    LEVEL.set(w, lv);
+    const isC = lv <= 35;
     WORDS.set(w, isC);
     const s = sig(w);
     let e = SIGS.get(s);
     if (!e) SIGS.set(s, (e = { common: [], other: [] }));
     (isC ? e.common : e.other).push(w);
   }
+  for (const e of SIGS.values()) { e.common.sort((a, b) => LEVEL.get(a) - LEVEL.get(b)); e.other.sort((a, b) => LEVEL.get(a) - LEVEL.get(b)); }
 }
+const sigLevel = (s) => { const e = SIGS.get(s); return LEVEL.get(e.common[0] || e.other[0]); };
 const nextSigs = (s) => { const out = []; for (const c of AZ) { const t = addLetter(s, c); if (SIGS.has(t) && !out.includes(t)) out.push(t); } return out; };
 const depthMemo = new Map();
 function depth(s) {          // words in the longest chain starting at s (including s)
@@ -356,7 +361,8 @@ function routeMap(start, T) {
 const tSig = () => sig(puzzle.target);
 const onCourse = () => !!puzzle.target && reaches(sig(cur()), tSig());
 const goalLen = () => (puzzle.target ? puzzle.target.length : puzzle.max);
-const freshAnagrams = () => { const c = cur(), e = SIGS.get(sig(c)); return e.common.filter((w) => w !== c && !S.girth.includes(w)); };
+const anagramsLeft = (w) => SIGS.get(sig(w)).common.filter((x) => x !== w && !S.girth.includes(x));
+const girthLeft = () => S.chain.map((w) => [w, anagramsLeft(w).length]).filter(([, n]) => n > 0);
 const GIRTH_LINES = ['Thicc.', 'Girthy.', 'Wider, not longer.', "Now that's girth.", 'Built like a soda can.'];
 
 // ---------- Puzzle selection ----------
@@ -433,10 +439,10 @@ function render(anim) {
   const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = S.done ? 'Final word' : 'Current word';
   L.appendChild(lbl);
   if (!S.done) {
-    const left = freshAnagrams().length;
-    if (left || S.girth.length) {
+    const left = girthLeft();
+    if (left.length || S.girth.length) {
       const g = document.createElement('div'); g.className = 'girth';
-      g.textContent = `Girth: ${S.girth.length}` + (left ? ` · ${left} anagram${left > 1 ? 's' : ''} of ${c.toUpperCase()} to find` : '');
+      g.textContent = `Girth: ${S.girth.length}` + (left.length ? ` · left to find: ${left.map(([w, n]) => `${n} in ${w.toUpperCase()}`).join(', ')}` : '');
       L.appendChild(g);
     }
   }
@@ -489,8 +495,9 @@ function render(anim) {
   $('ruler').style.setProperty('--tick', `calc(100% / ${goalLen()})`);
   requestAnimationFrame(() => { $('ruler-fill').style.width = Math.min(100, c.length / goalLen() * 100) + '%'; });
   // controls
-  $('btn-hint').textContent = `Help (${S.hintsLeft})`;
-  $('btn-hint').disabled = S.done || (S.hintsLeft === 0 && S.hintFor !== S.chain.length);
+  const hintedHere = S.hintFor === S.chain.length;
+  $('btn-hint').textContent = hintedHere && S.hintWordFor !== S.chain.length ? `Show word (${S.hintsLeft})` : `Help (${S.hintsLeft})`;
+  $('btn-hint').disabled = S.done || S.hintsLeft === 0 || S.hintWordFor === S.chain.length;
   $('btn-back').textContent = `Pull out (${S.backupsLeft})`;
   $('btn-back').disabled = S.done || S.backupsLeft === 0 || S.chain.length < 2;
   $('btn-done').disabled = S.done;
@@ -534,16 +541,18 @@ function backspace() { if (S.done) return; typed = typed.slice(0, -1); render();
 function submit() {
   if (S.done) return;
   const c = cur();
-  if (typed.length === c.length) {           // girth: an anagram of the current word
-    if (typed === c) return fail("That's the word you already have.");
-    if (sig(typed) !== sig(c)) return fail(`For girth, use exactly the letters in ${c.toUpperCase()}.`);
+  if (typed.length <= c.length) {            // girth: an anagram of any word in your chain
+    const base = S.chain.find((w) => w.length === typed.length);
+    if (!base) return fail(`Your chain has no ${typed.length}-letter word to rearrange.`);
+    if (typed === base) return fail(`${base.toUpperCase()} is already in your chain. Rearrange it into a different word.`);
+    if (sig(typed) !== sig(base)) return fail(`For girth, rearrange the letters of ${base.toUpperCase()}.`);
     if (!WORDS.has(typed)) return fail(`${typed.toUpperCase()} isn't in the dictionary.`);
     if (S.girth.includes(typed)) return fail('Already found that one.');
     S.girth.push(typed); typed = '';
-    say(`Girth +1. ${GIRTH_LINES[(S.girth.length - 1) % GIRTH_LINES.length]}`, 'ok');
+    say(`Girth +1 (${base.toUpperCase()} → ${S.girth[S.girth.length - 1].toUpperCase()}). ${GIRTH_LINES[(S.girth.length - 1) % GIRTH_LINES.length]}`, 'ok');
     save(); return render('pop');
   }
-  if (typed.length !== c.length + 1) return fail(`Add one letter to grow, or rearrange ${c.toUpperCase()} for girth.`);
+  if (typed.length !== c.length + 1) return fail(`Too long. Add just one letter to ${c.toUpperCase()}.`);
   const rest = [...typed];
   for (const ch of c) { const i = rest.indexOf(ch); if (i < 0) return fail(`Use every letter in ${c.toUpperCase()}, plus one.`); rest.splice(i, 1); }
   if (!WORDS.has(typed)) return fail(`${typed.toUpperCase()} isn't in the dictionary.`);
@@ -566,19 +575,49 @@ function submit() {
   save(); render('pop');
 }
 function fail(text) { say(text, 'err'); render('shake'); }
+// Pick the most helpful next step: on course, the step with the most everyday-word routes
+// to the target; off course, an everyday word with the longest growth ahead.
+const routeMemo = new Map();
+function routesTo(s, T, commonOnly) {
+  const k = s + '|' + T + '|' + commonOnly;
+  if (routeMemo.has(k)) return routeMemo.get(k);
+  let n = 0;
+  if (s === T) n = 1;
+  else for (const t of nextSigs(s)) if (isSub(t, T) && (!commonOnly || SIGS.get(t).common.length)) n += routesTo(t, T, commonOnly);
+  routeMemo.set(k, n);
+  return n;
+}
+function hintStep() {
+  const s = sig(cur());
+  const isC = (t) => SIGS.get(t).common.length > 0;
+  let cands = [];
+  if (onCourse()) {
+    const T = tSig();
+    cands = nextSigs(s).filter((t) => isSub(t, T) && reaches(t, T))
+      .map((t) => ({ t, score: [t === T || (isC(t) && routesTo(t, T, true) > 0) ? 1 : 0, -sigLevel(t), routesTo(t, T, true), routesTo(t, T, false)] }));
+  }
+  if (!cands.length) cands = nextSigs(s).map((t) => ({ t, score: [isC(t) ? 1 : 0, -sigLevel(t), depth(t), 0] }));
+  cands.sort((a, b) => b.score[0] - a.score[0] || b.score[1] - a.score[1] || b.score[2] - a.score[2] || b.score[3] - a.score[3]);
+  return cands[0] ? cands[0].t : null;
+}
 function hint() {
   if (S.done) return;
   const step = S.chain.length;
-  let b = null;
-  if (onCourse()) { const t = nextSigs(sig(cur())).find((x) => isSub(x, tSig()) && reaches(x, tSig())); if (t) b = { t }; }
-  if (!b) b = bestNext(sig(cur()));
-  if (!b) return;
-  if (S.hintFor !== step) {
+  const t = hintStep();
+  if (!t) return;
+  const L = addedLetter(sig(cur()), t);
+  const word = (puzzle.target && t === tSig()) ? puzzle.target : displayWord(t);
+  if (S.hintFor !== step) {                       // first tap: the letter
     if (S.hintsLeft <= 0) return;
     S.hintsLeft--; S.hintFor = step; save();
+    say(`Try adding ${'aefhilmnorsx'.includes(L) ? 'an' : 'a'} ${L.toUpperCase()}. Tap Help again to see the word.`, 'ok');
+  } else if (S.hintWordFor !== step) {            // second tap: the word
+    if (S.hintsLeft <= 0) return;
+    S.hintsLeft--; S.hintWordFor = step; save();
+    say(`Try ${word.toUpperCase()}.`, 'ok');
+  } else {
+    say(`Try ${word.toUpperCase()}.`, 'ok');
   }
-  const L = addedLetter(sig(cur()), b.t);
-  say(`Try adding ${'aefhilmnorsx'.includes(L) ? 'an' : 'a'} ${L.toUpperCase()}.`, 'ok');
   render();
 }
 function backUp() {
