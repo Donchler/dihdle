@@ -207,6 +207,11 @@
   details.routes summary::after { content: "Show"; font-size: 12px; letter-spacing: .04em; color: var(--lav-deep); }
   details.routes[open] summary::after { content: "Hide"; }
   details.routes .routes-body { padding: 0 12px 12px; }
+  .arc { font-size: 17px; font-weight: 800; margin: 8px 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: flex; flex-direction: column; padding: 5px 10px; border: 1.5px solid var(--ink); border-radius: 10px; background: #fff; min-width: 70px; }
+  .chip small { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+  .chip b { font-size: 16px; }
   .practice-tag { background: var(--lav); border: 1.5px solid var(--ink); border-radius: 99px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
 </style>
 </head>
@@ -267,7 +272,7 @@
   <div id="r-wide" style="display:none"><div class="wide-tag"><span>WIDE LOAD</span></div><div class="wide-note" id="r-wide-note"></div></div>
   <div class="lasted" id="r-lasted" style="display:none">You lasted <b id="r-lasted-time"></b></div>
   <div class="bar" id="r-bar"></div>
-  <div class="sub" id="r-detail"></div>
+  <div id="r-detail"></div>
   <h3>How you grew</h3>
   <div class="chainlist" id="r-chain"></div>
   <details class="routes" id="r-map-wrap">
@@ -737,8 +742,10 @@ function showResult() {
   const arc = len >= hardAt ? 'Started soft, finished hard.'
     : len >= half ? 'Busted early.'
     : "Couldn't get it up.";
-  $('r-detail').textContent = `${arc} 3 → ${len} letters · grew ${(len / 3).toFixed(1)}×`
-    + (S.girth.length ? ` · girth ${S.girth.length}` : '');
+  const chips = [['Length', `3 → ${len}`], ['Grew', `${(len / 3).toFixed(1)}×`]];
+  if (S.girth.length) chips.push(['Girth', S.girth.length]);
+  $('r-detail').innerHTML = `<div class="arc">${arc}</div><div class="chips">`
+    + chips.map(([k, v]) => `<div class="chip"><small>${k}</small><b>${v}</b></div>`).join('') + '</div>';
   const lastedMs = S.t0 && S.t1 ? S.t1 - S.t0 : null;
   $('r-lasted').style.display = lastedMs !== null ? 'inline-flex' : 'none';
   $('r-lasted-time').textContent = lastedMs !== null ? fmtTime(lastedMs) : '';
