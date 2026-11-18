@@ -231,7 +231,7 @@
   <ul>
     <li><b>Grow:</b> each new word uses <b>every letter</b> of the last word, <b>plus one</b>. Rearrange them however you like.</li>
     <li><b>The target:</b> a secret everyday object with a clue that sounds dirty. (It isn't.) Grow your word all the way into it. Letters you've got light up in the target.</li>
-    <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no bullseye. Pull out undoes one step, once.</li>
+    <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no happy ending. Pull out undoes one step, once.</li>
     <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter.</li>
     <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Help shows which letter to add; tap it again to see the word. You get 3 per day.</li>
   </ul>
@@ -392,7 +392,7 @@ function cur() { return S.chain[S.chain.length - 1]; }
 const growerAt = (max) => (puzzle && puzzle.target ? puzzle.target.length : 3 + Math.ceil((max - 3) / 2));
 function verdict(len, max) {
   const g = growerAt(max);
-  if (S && S.hit) return { grower: true, title: 'GROWER · BULLSEYE', line: `Bullseye. It was ${puzzle.target.toUpperCase()}.` };
+  if (S && S.hit) return { grower: true, title: 'GROWER · HAPPY ENDING', line: `It was ${puzzle.target.toUpperCase()} all along.` };
   if (len >= max) return { grower: true, title: 'CERTIFIED GROWER', line: 'Went the full length. Legendary.' };
   if (len >= g) return { grower: true, title: 'GROWER', line: puzzle.target ? 'Missed the target, but that is some impressive length.' : 'Respectable growth. Be proud.' };
   if ((len - 3) / (g - 3) >= 0.5) return { grower: false, title: 'SHOWER', line: 'Some change, but not a dramatic one.' };
@@ -474,7 +474,7 @@ function render(anim) {
     tr.className = 'row target' + (S.done ? ' solved' : '');
     reveal.forEach((ch) => { const t = document.createElement('div'); t.className = 'tile' + (ch ? ' on' : ''); t.textContent = ch; tr.appendChild(t); });
     const co = $('course');
-    if (S.hit) { co.className = 'course on'; co.textContent = 'Bullseye!'; }
+    if (S.hit) { co.className = 'course on'; co.textContent = 'Happy ending!'; }
     else if (S.done) { co.className = 'course off'; co.textContent = `It was ${T.toUpperCase()}.`; }
     else if (onCourse()) { co.className = 'course on'; co.textContent = 'On course: the target is still within reach'; }
     else { co.className = 'course off'; co.textContent = 'Off course: the target is out of reach. Keep growing anyway.'; }
@@ -485,7 +485,7 @@ function render(anim) {
   $('max-label').textContent = puzzle.target ? 'target' : 'max';
   const v = verdict(c.length, puzzle.max), badge = $('badge');
   const wasGrower = badge.classList.contains('grower');
-  badge.textContent = S.hit ? 'BULLSEYE' : v.grower ? (c.length >= puzzle.max ? 'FULL LENGTH' : 'GROWER') : 'SHOWER';
+  badge.textContent = S.hit ? 'HAPPY ENDING' : v.grower ? (c.length >= puzzle.max ? 'FULL LENGTH' : 'GROWER') : 'SHOWER';
   badge.classList.toggle('grower', v.grower);
   if (anim === 'pop' && (v.grower !== wasGrower || S.hit)) { badge.classList.remove('flip'); void badge.offsetWidth; badge.classList.add('flip'); }
   $('ruler-line').style.display = puzzle.target ? 'none' : 'block';
@@ -564,7 +564,7 @@ function submit() {
   const len = cur().length;
   if (puzzle.target && sig(cur()) === tSig()) {
     S.hit = true;
-    say(cur() === puzzle.target ? `Bullseye: ${puzzle.target.toUpperCase()}!` : `Right letters. It was ${puzzle.target.toUpperCase()}!`, 'ok');
+    say(cur() === puzzle.target ? `Happy ending: ${puzzle.target.toUpperCase()}!` : `Right letters. It was ${puzzle.target.toUpperCase()}. Happy ending!`, 'ok');
     return finish();
   }
   if (len >= puzzle.max) { say('Full length!', 'ok'); return finish(); }
@@ -662,7 +662,7 @@ function showStats() {
   const avg = st.played ? (st.total / st.played).toFixed(1) : '–';
   const gp = st.played ? Math.round((st.growers || 0) / st.played * 100) + '%' : '–';
   const hp = st.played ? Math.round((st.hits || 0) / st.played * 100) + '%' : '–';
-  $('stats').innerHTML = [['Played', st.played], ['Stamina<br>(streak)', st.streak], ['Grower<br>rate', gp], ['Bulls-<br>eyes', hp]]
+  $('stats').innerHTML = [['Played', st.played], ['Stamina<br>(streak)', st.streak], ['Grower<br>rate', gp], ['Happy<br>endings', hp]]
     .map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('');
   const dist = st.dist || {}; const keys = Object.keys(dist).map(Number);
   const lo = 3, hi = Math.max(13, ...keys); const top = Math.max(1, ...Object.values(dist));
