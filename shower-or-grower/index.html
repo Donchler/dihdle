@@ -100,9 +100,9 @@
     font-weight: 700; font-size: 14px; color: var(--ink); cursor: pointer;
   }
   .controls button { white-space: nowrap; padding: 0 6px; font-size: clamp(12px, 3.6vw, 14px); }
-  .controls #btn-hint { flex: 0.85; }
-  .controls #btn-back { flex: 1.45; }
-  .controls #btn-done { flex: 1; }
+  .controls #btn-hint { flex: 1.3; }
+  .controls #btn-back { flex: 1.4; }
+  .controls #btn-done { flex: 0.95; }
   .controls button:disabled { opacity: .35; cursor: default; }
   .controls button.armed { background: var(--red); color: #fff; border-color: var(--red); }
   .kb { display: flex; flex-direction: column; gap: 6px; user-select: none; }
@@ -244,7 +244,7 @@
     <div class="ladder" id="ladder"></div>
     <div class="msg" id="msg"></div>
     <div class="controls">
-      <button id="btn-hint">Help (3)</button>
+      <button id="btn-hint">Lend a Hand (3)</button>
       <button id="btn-back">Throw it Back (1)</button>
       <button id="btn-done">Pull Out</button>
     </div>
@@ -261,7 +261,7 @@
     <li><b>The target:</b> a secret everyday object with a clue that sounds dirty. (It isn't.) Grow your word all the way into it. Letters you've got light up in the target.</li>
     <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no happy ending. Throw it Back undoes one step, once. Pull Out ends your game.</li>
     <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter.</li>
-    <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Help shows which letter to add; tap it again to see the word. You get 3 per day.</li>
+    <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Lend a Hand shows which letter to slip in; tap it again and it shows you the word. You get 3 per day.</li>
   </ul>
   <div class="example" id="help-example"></div>
   <p class="sub">Everyone gets the same start word. A new one drops at midnight UTC.</p>
@@ -528,7 +528,7 @@ function render(anim) {
   requestAnimationFrame(() => { $('ruler-fill').style.width = Math.min(100, c.length / goalLen() * 100) + '%'; });
   // controls
   const hintedHere = S.hintFor === S.chain.length;
-  $('btn-hint').textContent = hintedHere && S.hintWordFor !== S.chain.length ? `Show word (${S.hintsLeft})` : `Help (${S.hintsLeft})`;
+  $('btn-hint').textContent = hintedHere && S.hintWordFor !== S.chain.length ? `Show Me (${S.hintsLeft})` : `Lend a Hand (${S.hintsLeft})`;
   $('btn-hint').disabled = S.done || S.hintsLeft === 0 || S.hintWordFor === S.chain.length;
   $('btn-back').textContent = `Throw it Back (${S.backupsLeft})`;
   $('btn-back').disabled = S.done || S.backupsLeft === 0 || S.chain.length < 2;
@@ -642,13 +642,13 @@ function hint() {
   if (S.hintFor !== step) {                       // first tap: the letter
     if (S.hintsLeft <= 0) return;
     S.hintsLeft--; S.hintFor = step; save();
-    say(`Try adding ${'aefhilmnorsx'.includes(L) ? 'an' : 'a'} ${L.toUpperCase()}. Tap Help again to see the word.`, 'ok');
+    say(`Slip in ${'aefhilmnorsx'.includes(L) ? 'an' : 'a'} ${L.toUpperCase()}. Need more? Tap again.`, 'ok');
   } else if (S.hintWordFor !== step) {            // second tap: the word
     if (S.hintsLeft <= 0) return;
     S.hintsLeft--; S.hintWordFor = step; save();
-    say(`Try ${word.toUpperCase()}.`, 'ok');
+    say(`Stick ${word.toUpperCase()} in there.`, 'ok');
   } else {
-    say(`Try ${word.toUpperCase()}.`, 'ok');
+    say(`Stick ${word.toUpperCase()} in there.`, 'ok');
   }
   render();
 }
