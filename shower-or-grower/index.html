@@ -211,7 +211,7 @@
     <div class="meter">
       <div class="meter-top"><span class="badge" id="badge">SHOWER</span><span><strong id="len">3</strong> letters · <span id="max-label">max</span> <strong id="max">–</strong></span></div>
       <div class="ruler" id="ruler"><i id="ruler-fill"></i><b id="ruler-line"></b></div>
-      <div class="scale"><span>SOFT</span><span id="scale-mid">GROWER ZONE →</span><span id="scale-end">FULL LENGTH</span></div>
+      <div class="scale"><span>SOFT</span><span id="scale-mid">GROWER ZONE →</span><span id="scale-end">HARD</span></div>
     </div>
     <div class="ladder" id="ladder"></div>
     <div class="msg" id="msg"></div>
@@ -491,7 +491,7 @@ function render(anim) {
   $('ruler-line').style.display = puzzle.target ? 'none' : 'block';
   $('ruler-line').style.left = ((growerAt(puzzle.max) - 0.5) / puzzle.max * 100) + '%';
   $('scale-mid').textContent = puzzle.target ? '' : v.grower ? 'GROWER ZONE ✓' : `GROWER AT ${growerAt(puzzle.max)} →`;
-  $('scale-end').textContent = puzzle.target ? `TARGET: ${goalLen()} LETTERS` : 'FULL LENGTH';
+  $('scale-end').textContent = 'HARD';
   $('ruler').style.setProperty('--tick', `calc(100% / ${goalLen()})`);
   requestAnimationFrame(() => { $('ruler-fill').style.width = Math.min(100, c.length / goalLen() * 100) + '%'; });
   // controls
