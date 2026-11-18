@@ -192,6 +192,21 @@
     background: repeating-linear-gradient(-45deg, var(--yellow) 0 12px, #fff 12px 24px); font-weight: 800; letter-spacing: .06em; }
   .wide-tag span { background: #fff; padding: 0 4px; }
   .wide-note { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+  .lasted {
+    display: inline-flex; align-items: baseline; gap: 8px; margin: 12px 0 2px; padding: 8px 14px;
+    background: var(--yellow); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 0 3px 0 var(--ink);
+    font-weight: 800; font-size: 16px;
+  }
+  .lasted b { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 30px; line-height: 1; }
+  details.routes { margin-top: 16px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; }
+  details.routes summary {
+    list-style: none; cursor: pointer; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink);
+  }
+  details.routes summary::-webkit-details-marker { display: none; }
+  details.routes summary::after { content: "Show"; font-size: 12px; letter-spacing: .04em; color: var(--lav-deep); }
+  details.routes[open] summary::after { content: "Hide"; }
+  details.routes .routes-body { padding: 0 12px 12px; }
   .practice-tag { background: var(--lav); border: 1.5px solid var(--ink); border-radius: 99px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
 </style>
 </head>
@@ -250,15 +265,18 @@
   <div class="verdict" id="r-verdict"></div>
   <div class="rating" id="r-rating"></div>
   <div id="r-wide" style="display:none"><div class="wide-tag"><span>WIDE LOAD</span></div><div class="wide-note" id="r-wide-note"></div></div>
+  <div class="lasted" id="r-lasted" style="display:none">You lasted <b id="r-lasted-time"></b></div>
   <div class="bar" id="r-bar"></div>
   <div class="sub" id="r-detail"></div>
   <h3>How you grew</h3>
   <div class="chainlist" id="r-chain"></div>
-  <div id="r-map-wrap">
-    <h3 id="r-map-title">Every route to the target</h3>
-    <div class="sub" id="r-map-sub"></div>
-    <div class="map" id="r-map"></div>
-  </div>
+  <details class="routes" id="r-map-wrap">
+    <summary id="r-map-title">Every route to the target</summary>
+    <div class="routes-body">
+      <div class="sub" id="r-map-sub"></div>
+      <div class="map" id="r-map"></div>
+    </div>
+  </details>
   <div id="r-best-wrap">
     <h3>The full-length route</h3>
     <div class="chainlist" id="r-best"></div>
@@ -707,10 +725,11 @@ function showResult() {
     if (i >= len) return '<i></i>';
     return `<i class="${S.hinted.includes(i - 2) ? 'hint' : 'gain'}"></i>`;
   }).join('');
-  const hints = S.hinted.length;
   $('r-detail').textContent = `Soft: 3 letters → finished at ${len}` + (puzzle.target ? ` (target ${goalLen()})` : ` (max ${puzzle.max})`) + ` · grew ${(len / 3).toFixed(1)}×`
-    + (S.girth.length ? ` · girth ${S.girth.length}` : '')
-    + (hints ? ` · ${hints} help${hints > 1 ? 's' : ''}` : '') + (S.t0 && S.t1 ? ` · lasted ${fmtTime(S.t1 - S.t0)}` : '');
+    + (S.girth.length ? ` · girth ${S.girth.length}` : '');
+  const lastedMs = S.t0 && S.t1 ? S.t1 - S.t0 : null;
+  $('r-lasted').style.display = lastedMs !== null ? 'inline-flex' : 'none';
+  $('r-lasted-time').textContent = lastedMs !== null ? fmtTime(lastedMs) : '';
   const fmtChain = (arr) => arr.map((w) => w.toUpperCase()).join(' <span>→</span> ');
   $('r-chain').innerHTML = fmtChain(S.chain);
   $('r-best').innerHTML = fmtChain(fullChain(puzzle.start));
@@ -736,6 +755,7 @@ function renderMap() {
     html += `<div class="lvl"><b>${L}</b><div>${items.join('')}</div></div>`;
   }
   $('r-map').innerHTML = html;
+  $('r-map-title').textContent = `Every route to the target (${routes})`;
   const rt = `${routes} route${routes === 1 ? '' : 's'} from ${puzzle.start.toUpperCase()} to ${puzzle.target.toUpperCase()}.`;
   $('r-map-sub').textContent = S.hit ? `${rt} Yours is in green.` : offShown ? `${rt} Red is where you went off course.` : `${rt} You stopped at the green one.`;
 }
