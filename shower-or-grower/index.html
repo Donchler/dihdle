@@ -732,7 +732,12 @@ function showResult() {
     if (i >= len) return '<i></i>';
     return `<i class="${S.hinted.includes(i - 2) ? 'hint' : 'gain'}"></i>`;
   }).join('');
-  $('r-detail').textContent = `Soft: 3 letters → finished at ${len}` + (puzzle.target ? ` (target ${goalLen()})` : ` (max ${puzzle.max})`) + ` · grew ${(len / 3).toFixed(1)}×`
+  // "Hard territory" = the HARD end of the bar: the target's length (practice: the grower line).
+  const hardAt = growerAt(puzzle.max), half = 3 + (hardAt - 3) / 2;
+  const arc = len >= hardAt ? 'Started soft, but finished hard.'
+    : len >= half ? 'Started soft, finished semi-hard.'
+    : 'Started soft, stayed soft.';
+  $('r-detail').textContent = `${arc} 3 → ${len} letters · grew ${(len / 3).toFixed(1)}×`
     + (S.girth.length ? ` · girth ${S.girth.length}` : '');
   const lastedMs = S.t0 && S.t1 ? S.t1 - S.t0 : null;
   $('r-lasted').style.display = lastedMs !== null ? 'inline-flex' : 'none';
