@@ -97,7 +97,7 @@
     if (st && st.done) {
       const len = st.chain[st.chain.length - 1].length;
       const p = document.getElementById('played');
-      p.textContent = st.hit ? `You played today: happy ending at ${len} letters.` : `You played today: ${len} letters. The answer is waiting.`;
+      p.textContent = (st.hit ? `You played today: happy ending at ${len} letters.` : `You played today: ${len} letters. The answer is waiting.`) + (st.wide ? ' Wide load.' : '');
       p.style.display = 'block';
       document.getElementById('play').textContent = 'See your result';
     }

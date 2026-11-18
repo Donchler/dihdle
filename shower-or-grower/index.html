@@ -138,8 +138,8 @@
   .chainlist { font-weight: 700; font-size: 14px; text-transform: uppercase; word-break: break-word; }
   .chainlist span { color: var(--ink-soft); font-weight: 400; }
   .share-preview { white-space: pre-wrap; background: #fff; border: 2px dashed var(--ink-soft); border-radius: 10px; padding: 10px; font-size: 14px; margin-top: 10px; }
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; gap: 6px; }
-  .stats b { display: block; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 28px; }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); text-align: center; gap: 6px; }
+  .stats b { display: block; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 24px; }
   .stats span { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
   .loading { flex: 1; display: grid; place-items: center; color: var(--ink-soft); font-weight: 600; text-align: center; }
   .badge {
@@ -188,6 +188,10 @@
   .node.mine { background: #b8f0c9; border-color: var(--ink); }
   .node.off { background: #ffd5d6; border-color: var(--red); }
   .node.goal { background: var(--yellow); border-color: var(--ink); }
+  .wide-tag { display: inline-block; margin-top: 8px; padding: 4px 12px; border: 2px solid var(--ink); border-radius: 8px;
+    background: repeating-linear-gradient(-45deg, var(--yellow) 0 12px, #fff 12px 24px); font-weight: 800; letter-spacing: .06em; }
+  .wide-tag span { background: #fff; padding: 0 4px; }
+  .wide-note { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
   .practice-tag { background: var(--lav); border: 1.5px solid var(--ink); border-radius: 99px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
 </style>
 </head>
@@ -232,7 +236,7 @@
     <li><b>Grow:</b> each new word uses <b>every letter</b> of the last word, <b>plus one</b>. Rearrange them however you like.</li>
     <li><b>The target:</b> a secret everyday object with a clue that sounds dirty. (It isn't.) Grow your word all the way into it. Letters you've got light up in the target.</li>
     <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no happy ending. Pull out undoes one step, once.</li>
-    <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter.</li>
+    <li><b>Girth:</b> rearrange any word in your chain into a different word (same letters) for bonus points. Just type it and press Enter. Finish with more girth than letters in your final word and you've got a <b>Wide Load</b>.</li>
     <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Help shows which letter to add; tap it again to see the word. You get 3 per day.</li>
   </ul>
   <div class="example" id="help-example"></div>
@@ -245,6 +249,7 @@
   <div class="sub" id="r-title"></div>
   <div class="verdict" id="r-verdict"></div>
   <div class="rating" id="r-rating"></div>
+  <div id="r-wide" style="display:none"><div class="wide-tag"><span>WIDE LOAD</span></div><div class="wide-note" id="r-wide-note"></div></div>
   <div class="bar" id="r-bar"></div>
   <div class="sub" id="r-detail"></div>
   <h3>How you grew</h3>
@@ -442,7 +447,8 @@ function render(anim) {
     const left = girthLeft();
     if (left.length || S.girth.length) {
       const g = document.createElement('div'); g.className = 'girth';
-      g.textContent = `Girth: ${S.girth.length}` + (left.length ? ` · left to find: ${left.map(([w, n]) => `${n} in ${w.toUpperCase()}`).join(', ')}` : '');
+      const need = c.length + 1, wl = S.girth.length >= need ? 'wide load secured' : `wide load at ${need}+`;
+      g.textContent = `Girth: ${S.girth.length} · ${wl}` + (left.length ? ` · left: ${left.map(([w, n]) => `${n} in ${w.toUpperCase()}`).join(', ')}` : '');
       L.appendChild(g);
     }
   }
@@ -638,6 +644,7 @@ function callIt() {
 }
 function finish() {
   S.done = true; S.t1 = Date.now(); typed = '';
+  S.wide = S.girth.length > cur().length;
   if (mode === 'daily') recordStats();
   save(); render();
   setTimeout(showResult, 600);
@@ -654,6 +661,7 @@ function recordStats() {
   if (len >= puzzle.max) st.full++;
   if (verdict(len, puzzle.max).grower) st.growers++;
   if (S.hit) st.hits = (st.hits || 0) + 1;
+  if (S.wide) st.wides = (st.wides || 0) + 1;
   st.dist[len] = (st.dist[len] || 0) + 1;
   store.set('stats', st);
 }
@@ -662,7 +670,7 @@ function showStats() {
   const avg = st.played ? (st.total / st.played).toFixed(1) : '–';
   const gp = st.played ? Math.round((st.growers || 0) / st.played * 100) + '%' : '–';
   const hp = st.played ? Math.round((st.hits || 0) / st.played * 100) + '%' : '–';
-  $('stats').innerHTML = [['Played', st.played], ['Stamina<br>(streak)', st.streak], ['Grower<br>rate', gp], ['Happy<br>endings', hp]]
+  $('stats').innerHTML = [['Played', st.played], ['Stamina<br>(streak)', st.streak], ['Grower<br>rate', gp], ['Happy<br>endings', hp], ['Wide<br>loads', st.wides || 0]]
     .map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('');
   const dist = st.dist || {}; const keys = Object.keys(dist).map(Number);
   const lo = 3, hi = Math.max(13, ...keys); const top = Math.max(1, ...Object.values(dist));
@@ -685,13 +693,15 @@ function shareText() {
   const girth = S.girth.length ? `\nGirth: ${S.girth.length}` : '';
   const head = mode === 'daily' ? `Shower or Grower? #${puzzle.no}` : 'Shower or Grower? (practice)';
   const time = S.t0 && S.t1 ? ` · lasted ${fmtTime(S.t1 - S.t0)}` : '';
-  return `${head}\n${v.title} · 3 → ${len} letters${time}\n${bar}${girth}\n${SHARE_URL}`;
+  return `${head}\n${v.title}${S.wide ? ' · WIDE LOAD' : ''} · 3 → ${len} letters${time}\n${bar}${girth}\n${SHARE_URL}`;
 }
 function showResult() {
   const len = cur().length, v = verdict(len, puzzle.max);
   $('r-title').textContent = mode === 'daily' ? `Shower or Grower? #${puzzle.no}` : 'Practice round';
   $('r-verdict').textContent = v.title;
   $('r-rating').textContent = v.line;
+  $('r-wide').style.display = S.wide ? 'block' : 'none';
+  $('r-wide-note').textContent = S.wide ? `Girth ${S.girth.length} on a ${len}-letter word. Wider than it is long.` : '';
   $('r-bar').innerHTML = Array.from({ length: Math.max(len, goalLen()) }, (_, i) => {
     if (i < 3) return '<i class="base"></i>';
     if (i >= len) return '<i></i>';
