@@ -193,11 +193,11 @@
   .wide-tag span { background: #fff; padding: 0 4px; }
   .wide-note { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
   .lasted {
-    display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 12px 0 2px; padding: 8px 14px;
+    display: inline-flex; flex-wrap: nowrap; align-items: baseline; gap: 6px; margin: 12px 0 2px; white-space: nowrap; padding: 8px 12px;
     background: var(--yellow); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 0 3px 0 var(--ink);
-    font-weight: 800; font-size: 16px;
+    font-weight: 800; font-size: clamp(13px, 3.8vw, 15px);
   }
-  .lasted b { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 24px; line-height: 1.1; }
+  .lasted b { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: clamp(15px, 4.7vw, 20px); line-height: 1.2; white-space: nowrap; }
   details.routes { margin-top: 16px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; }
   details.routes summary {
     list-style: none; cursor: pointer; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;
