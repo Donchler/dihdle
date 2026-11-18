@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Shower or Grower? · Dihdle</title>
+<meta name="description" content="Grow a 3-letter word into today's secret object. Every clue sounds dirty. Every answer is clean.">
+<meta property="og:title" content="Shower or Grower? · Dihdle">
+<meta property="og:description" content="Grow a 3-letter word into today's secret object. Sounds dirty. Think clean.">
+<meta property="og:image" content="https://trenttrumpa-code.github.io/dihdle/og.png">
+<meta property="og:url" content="https://trenttrumpa-code.github.io/dihdle/shower-or-grower/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fff6db;
+    --yellow: #ffd84d;
+    --yellow-deep: #f5b700;
+    --lav: #cdbdff;
+    --lav-deep: #8c70e8;
+    --ink: #2b2140;
+    --ink-soft: #6a5f80;
+    --red: #e5484d;
+    --green: #2fa36b;
+    --radius: 12px;
+    --app: min(100vw, 480px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center;
+    overscroll-behavior: none;
+  }
+  .app {
+    width: var(--app); height: 100dvh;
+    display: flex; flex-direction: column;
+    padding: 10px 14px 8px;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--ink);
+  }
+  .brand { font-family: "Bricolage Grotesque", system-ui, sans-serif; line-height: 1; }
+  .brand b { font-weight: 800; font-size: 26px; letter-spacing: -0.5px; }
+  .brand span { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-top: 3px; }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--ink);
+    background: #fff; color: var(--ink); font-size: 17px; font-weight: 700; cursor: pointer;
+  }
+  .meter { margin: 10px 0 4px; }
+  .meter-top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+  .meter-top strong { color: var(--ink); font-size: 15px; }
+  .ruler {
+    position: relative; height: 18px; margin-top: 4px; border: 2px solid var(--ink); border-radius: 6px;
+    background: repeating-linear-gradient(90deg, transparent 0 calc(var(--tick) - 2px), rgba(43,33,64,.25) calc(var(--tick) - 2px) var(--tick)), #fff;
+    overflow: hidden;
+  }
+  .ruler i {
+    position: absolute; inset: 0 auto 0 0; width: 0; background: var(--yellow);
+    border-right: 2px solid var(--ink); transition: width .35s cubic-bezier(.3,1.4,.6,1);
+  }
+  .ladder { flex: 1; overflow-y: auto; padding: 8px 0 4px; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+  .ladder .spacer { flex: 1; }
+  .row { display: flex; gap: 4px; justify-content: center; }
+  .tile {
+    --size: min(44px, calc((var(--app) - 40px) / var(--n) - 4px));
+    width: var(--size); height: var(--size); border-radius: 8px;
+    display: grid; place-items: center;
+    font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800;
+    font-size: calc(var(--size) * .52); text-transform: uppercase;
+    border: 2px solid var(--ink); background: #fff;
+    transition: background .15s, opacity .15s, transform .15s;
+  }
+  .row.past .tile { --size: min(26px, calc((var(--app) - 40px) / var(--n) - 4px)); border-width: 1.5px; border-radius: 5px; background: #fff8e6; color: var(--ink-soft); }
+  .row.past .tile.added { background: #fff0b0; color: var(--ink); }
+  .row.past.hinted .tile.added { background: #ffe3b3; }
+  .row.current .tile { background: var(--lav); }
+  .row.current .tile.used { opacity: .3; transform: scale(.9); }
+  .row.input .tile { background: #fff; border-style: dashed; }
+  .row.input .tile.kept { background: var(--lav); border-style: solid; }
+  .row.input .tile.new { background: var(--yellow); border-style: solid; }
+  .row.input .tile.bad { background: #ffd5d6; border-color: var(--red); border-style: solid; }
+  .row.shake { animation: shake .35s; }
+  @keyframes shake { 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+  .row.pop .tile { animation: pop .3s; }
+  @keyframes pop { 50% { transform: scale(1.12); } }
+  .label { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+  .msg { min-height: 22px; text-align: center; font-weight: 600; font-size: 14px; margin: 4px 0; }
+  .msg.err { color: var(--red); }
+  .msg.ok { color: var(--green); }
+  .controls { display: flex; gap: 8px; margin-bottom: 8px; }
+  .controls button {
+    flex: 1; height: 40px; border-radius: 10px; border: 2px solid var(--ink); background: #fff;
+    font-weight: 700; font-size: 14px; color: var(--ink); cursor: pointer;
+  }
+  .controls button:disabled { opacity: .35; cursor: default; }
+  .controls button.armed { background: var(--red); color: #fff; border-color: var(--red); }
+  .kb { display: flex; flex-direction: column; gap: 6px; user-select: none; }
+  .kb-row { display: flex; gap: 5px; justify-content: center; }
+  .key {
+    flex: 1; max-width: 42px; height: 52px; border-radius: 8px; border: none;
+    background: #fff; box-shadow: 0 2px 0 rgba(43,33,64,.35);
+    font-weight: 700; font-size: 17px; text-transform: uppercase; color: var(--ink); cursor: pointer;
+  }
+  .key.wide { max-width: 66px; flex: 1.5; font-size: 13px; }
+  .key.enter { background: var(--yellow); }
+  .key:active { transform: translateY(2px); box-shadow: none; }
+  .key.in-word { background: #e7dfff; }
+  /* Modals */
+  .scrim { position: fixed; inset: 0; background: rgba(43,33,64,.45); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
+  .scrim.open { display: flex; }
+  .sheet {
+    width: var(--app); max-height: 92dvh; overflow-y: auto; background: var(--cream);
+    border: 2px solid var(--ink); border-bottom: none; border-radius: 18px 18px 0 0; padding: 18px 18px 22px;
+    animation: up .25s ease-out;
+  }
+  @keyframes up { from { transform: translateY(30px); opacity: 0; } }
+  .sheet h2 { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 26px; margin: 0 0 6px; }
+  .sheet h3 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin: 16px 0 6px; }
+  .sheet p, .sheet li { font-size: 15px; }
+  .sheet ul { padding-left: 20px; margin: 6px 0; }
+  .example { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; }
+  .btn {
+    display: block; width: 100%; height: 48px; margin-top: 10px; border-radius: 12px; border: 2px solid var(--ink);
+    background: var(--yellow); font-weight: 800; font-size: 16px; color: var(--ink); cursor: pointer;
+  }
+  .btn.secondary { background: #fff; }
+  .close { float: right; }
+  .big { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 44px; line-height: 1; }
+  .rating { font-size: 18px; font-weight: 700; margin: 6px 0 2px; }
+  .sub { color: var(--ink-soft); font-size: 14px; }
+  .chainlist { font-weight: 700; font-size: 14px; text-transform: uppercase; word-break: break-word; }
+  .chainlist span { color: var(--ink-soft); font-weight: 400; }
+  .share-preview { white-space: pre-wrap; background: #fff; border: 2px dashed var(--ink-soft); border-radius: 10px; padding: 10px; font-size: 14px; margin-top: 10px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; gap: 6px; }
+  .stats b { display: block; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 28px; }
+  .stats span { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
+  .loading { flex: 1; display: grid; place-items: center; color: var(--ink-soft); font-weight: 600; text-align: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px;
+    border: 2px solid var(--ink); font-weight: 800; font-size: 13px; letter-spacing: .04em;
+    background: #dff1ff; transition: background .3s, transform .3s;
+  }
+  .badge.grower { background: #b8f0c9; }
+  .badge.flip { animation: flip .6s; }
+  @keyframes flip { 30% { transform: scale(1.35) rotate(-6deg); } 60% { transform: scale(.95) rotate(3deg); } }
+  .scale { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--ink-soft); margin-top: 3px; letter-spacing: .04em; }
+  .ruler b { position: absolute; top: -2px; bottom: -2px; width: 0; border-left: 2px dashed var(--ink); opacity: .55; }
+  .ways { text-align: center; font-size: 12px; color: var(--ink-soft); font-weight: 600; margin-top: 2px; }
+  .ways.tight { color: var(--red); }
+  .verdict { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 40px; line-height: 1.05; }
+  .bar { display: flex; gap: 3px; margin: 10px 0 2px; }
+  .bar i { flex: 1; height: 16px; border-radius: 3px; border: 1.5px solid var(--ink); background: #fff; }
+  .bar i.base { background: var(--lav); }
+  .bar i.gain { background: #6fd39a; }
+  .bar i.hint { background: var(--yellow); }
+  .dist { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .dist div { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+  .dist span:first-child { width: 22px; text-align: right; color: var(--ink-soft); }
+  .dist .fill { height: 20px; min-width: 22px; background: var(--lav); border-radius: 4px; color: var(--ink); font-size: 12px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+  .dist .fill.grow { background: #6fd39a; }
+  .dist .fill.today { outline: 2px solid var(--ink); }
+  .clue {
+    border: 2px solid var(--ink); border-radius: var(--radius); background: #fff; padding: 8px 10px 7px; margin-top: 8px;
+  }
+  .clue-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .clue-top b { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+  .clue q { display: block; font-weight: 700; font-size: 15px; line-height: 1.3; margin: 2px 0 6px; quotes: "“" "”"; }
+  .row.target { justify-content: flex-start; }
+  .row.target .tile { --size: 24px; border-width: 1.5px; border-radius: 5px; font-size: 13px; background: #f3efe2; border-style: dashed; }
+  .row.target .tile.on { background: var(--lav); border-style: solid; }
+  .row.target.solved .tile { background: #b8f0c9; border-style: solid; }
+  .course { font-size: 12px; font-weight: 700; margin-top: 5px; }
+  .course.on { color: var(--green); }
+  .course.off { color: var(--red); }
+  .girth { font-size: 12px; font-weight: 700; color: var(--lav-deep); text-align: center; }
+  .map { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .lvl { display: flex; gap: 8px; align-items: flex-start; }
+  .lvl > b { width: 18px; text-align: right; color: var(--ink-soft); font-size: 13px; padding-top: 3px; flex: none; }
+  .lvl > div { display: flex; flex-wrap: wrap; gap: 4px; }
+  .node { font-size: 12px; font-weight: 700; padding: 3px 7px; border-radius: 6px; background: #fff; border: 1.5px solid #d9d2bf; text-transform: uppercase; }
+  .node.mine { background: #b8f0c9; border-color: var(--ink); }
+  .node.off { background: #ffd5d6; border-color: var(--red); }
+  .node.goal { background: var(--yellow); border-color: var(--ink); }
+  .practice-tag { background: var(--lav); border: 1.5px solid var(--ink); border-radius: 99px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <div class="brand"><a href="../" style="color:inherit;text-decoration:none"><b>Dihdle</b></a><span id="subtitle">Shower or Grower?</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="icon-btn" id="btn-help" aria-label="How to play">?</button>
+      <button class="icon-btn" id="btn-stats" aria-label="Stats"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="9" width="3" height="7" rx="1" fill="currentColor"/><rect x="7.5" y="4" width="3" height="12" rx="1" fill="currentColor"/><rect x="13" y="7" width="3" height="9" rx="1" fill="currentColor"/></svg></button>
+    </div>
+  </header>
+  <div class="loading" id="loading">Warming up…</div>
+  <div id="game" style="display:none; flex:1; display:none; flex-direction:column; min-height:0">
+    <div class="clue" id="clue">
+      <div class="clue-top"><b>Grow it into…</b><b id="clue-len"></b></div>
+      <q id="clue-text"></q>
+      <div class="row target" id="target-row"></div>
+      <div class="course" id="course"></div>
+    </div>
+    <div class="meter">
+      <div class="meter-top"><span class="badge" id="badge">SHOWER</span><span><strong id="len">3</strong> letters · <span id="max-label">max</span> <strong id="max">–</strong></span></div>
+      <div class="ruler" id="ruler"><i id="ruler-fill"></i><b id="ruler-line"></b></div>
+      <div class="scale"><span>SOFT</span><span id="scale-mid">GROWER ZONE →</span><span id="scale-end">FULL LENGTH</span></div>
+    </div>
+    <div class="ladder" id="ladder"></div>
+    <div class="msg" id="msg"></div>
+    <div class="controls">
+      <button id="btn-hint">Help (3)</button>
+      <button id="btn-back">Pull out (1)</button>
+      <button id="btn-done">I'm done</button>
+    </div>
+    <div class="kb" id="kb"></div>
+  </div>
+</div>
+
+<div class="scrim" id="m-help"><div class="sheet">
+  <button class="icon-btn close" data-close>✕</button>
+  <h2>Shower or Grower?</h2>
+  <p>Everyone starts with the same 3-letter word. <b>Showers</b> don't change much from there. <b>Growers</b> end up <i>much</i> bigger than they started.</p>
+  <ul>
+    <li><b>Grow:</b> each new word uses <b>every letter</b> of the last word, <b>plus one</b>. Rearrange them however you like.</li>
+    <li><b>The target:</b> a secret everyday object with a clue that sounds dirty. (It isn't.) Grow your word all the way into it. Letters you've got light up in the target.</li>
+    <li><b>Stay on course:</b> pick the wrong letter and the target goes out of reach. You can keep growing, but no bullseye. Pull out undoes one step, once.</li>
+    <li><b>Girth:</b> rearrange your current word into a different word (same letters, same length) for bonus points. Grab them before you grow.</li>
+    <li>Reach the target's length and you're a <b>Grower</b>. Barely change and you're a <b>Shower</b>. Help shows which letter to add (3 per day).</li>
+  </ul>
+  <div class="example" id="help-example"></div>
+  <p class="sub">Everyone gets the same start word. A new one drops at midnight UTC.</p>
+  <button class="btn" data-close>Let's see what you've got</button>
+</div></div>
+
+<div class="scrim" id="m-result"><div class="sheet">
+  <button class="icon-btn close" data-close>✕</button>
+  <div class="sub" id="r-title"></div>
+  <div class="verdict" id="r-verdict"></div>
+  <div class="rating" id="r-rating"></div>
+  <div class="bar" id="r-bar"></div>
+  <div class="sub" id="r-detail"></div>
+  <h3>How you grew</h3>
+  <div class="chainlist" id="r-chain"></div>
+  <div id="r-map-wrap">
+    <h3 id="r-map-title">Every route to the target</h3>
+    <div class="sub" id="r-map-sub"></div>
+    <div class="map" id="r-map"></div>
+  </div>
+  <div id="r-best-wrap">
+    <h3>The full-length route</h3>
+    <div class="chainlist" id="r-best"></div>
+  </div>
+  <div class="share-preview" id="r-share"></div>
+  <button class="btn" id="btn-share">Copy result</button>
+  <button class="btn secondary" id="btn-practice">Practice a random word</button>
+  <p class="sub" id="r-next" style="text-align:center;margin-top:12px"></p>
+</div></div>
+
+<div class="scrim" id="m-stats"><div class="sheet">
+  <button class="icon-btn close" data-close>✕</button>
+  <h2>Stats</h2>
+  <div class="stats" id="stats"></div>
+  <h3>Final lengths</h3>
+  <div class="dist" id="dist"></div>
+  <button class="btn secondary" id="btn-practice2">Practice a random word</button>
+  <button class="btn secondary" id="btn-daily" style="display:none">Back to today's puzzle</button>
+</div></div>
+
+<script>
+// ---------- Config ----------
+const STARTS = ["sue","pus","ark","ode","let","mop","won","oar","bat","wee","lip","rev","tar","wet","din","any","hug","log","kit","moo","bun","pod","urn","too","nap","nag","win","mes","rib","hot","bet","bow","raw","dim","put","row","bad","fee","how","pea","arc","tit","cut","ink","ask","sow","tea","elk","ran","rob","war","pas","old","was","red","sea","tot","sat","age","die","dam","cam","our","hut","van","gas","has","are","end","rod","new","bus","hit","wit","her","ail","rug","tab","rig","sob","hen","cad","fro","ago","all","lee","pop","par","eve","fed","tub","fit","lug","dog","ace","his","hoe","nod","mar","man","ego","law","rue","ill","dot","pat","owl","led","ohs","kin","lab","eat","amp","far","lay","say","bed","wan","ado","lye","god","ohm","bee","sac","run","own","map","ray","ilk","gnu","ram","hew","woo","ass","pep","pun","goo","arm","but","cub","who","mat","ewe","low","gal","non","dos","chi","fat","dew","elm","sub","lid","dab","ear","owe","flu","mas","sad","gin","fur","bra","rut","lie","wad","cur","cap","pad","use","ups","ape","sod","air","ban","lop","ifs","vie","rap","ale","rub","she","can","den","spa","pal","had","rye","cue","lad","ads","rat","due","woe","boo","pew","awe","elf","ugh","nay","for","bar","act","fin","don","fog","ash","lap","wag","lob","ate","nab","tap","cod","sap","era","gee","aim","nut","met","doe","mad","ski","car","cat","hes","bid","gun","out","the","saw","apt","gel","sup","hat","yes","gut","via","eel","sun","rid","art","coo","ant","aid","hop","men","fir","mob","duo","sag","rim","and","hem","tag","pan","eke","sew","tan","leg","rag","sum","now","tug","wed","lag"];   // practice starts (no target)
+const DAILY = [{"start":"art","target":"toaster","clue":"Slide two in, push down, and wait for the pop."},{"start":"gel","target":"plunger","clue":"Push it in, pull it out, and keep going until things start flowing."},{"start":"ace","target":"candles","clue":"Long, stiff, and they start dripping once things heat up."},{"start":"set","target":"rockets","clue":"Long, upright, and over in seconds once they go off."},{"start":"lad","target":"ladders","clue":"Spread their legs, climb on, and try not to fall off."},{"start":"ape","target":"stapler","clue":"Slam it down hard and somebody's getting pinned."},{"start":"gin","target":"caulking","clue":"Squeeze the tube and fill every last crack."},{"start":"lie","target":"pickles","clue":"Long, bumpy, and they've been soaking in juice for weeks."},{"start":"sea","target":"harness","clue":"Strap in tight. It's going to be a wild ride."},{"start":"ate","target":"mattress","clue":"Sees the most action in the house, and it's always on its back."},{"start":"nit","target":"pistons","clue":"Pumping in and out all day just to keep things running."},{"start":"pen","target":"sponges","clue":"Give them a squeeze and they get wet all over."},{"start":"gas","target":"sausages","clue":"Thick, juicy, and best straight off the grill."},{"start":"ace","target":"peaches","clue":"Soft, round, a little fuzzy, and best when perfectly ripe."}];     // daily puzzles: { start, target, clue }
+const EPOCH = Date.UTC(2026, 10, 18);   // Puzzle #1 = 2026-11-18 (UTC)
+const SHARE_URL = 'trenttrumpa-code.github.io/dihdle';
+const HINTS = 3, BACKUPS = 1;
+const DAY = 86400000;
+
+// ---------- Storage (may be unavailable) ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('sog2:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('sog2:' + k, JSON.stringify(v)); } catch {} },
+};
+
+// ---------- Dictionary ----------
+const AZ = 'abcdefghijklmnopqrstuvwxyz';
+const sig = (w) => [...w].sort().join('');
+const addLetter = (s, c) => { for (let i = 0; i < s.length; i++) if (s[i] > c) return s.slice(0, i) + c + s.slice(i); return s + c; };
+let WORDS = new Map();   // word -> isCommon
+let SIGS = new Map();    // sig -> { common: [words], other: [words] }
+
+function loadWords(text) {
+  const lines = text.split('\n');
+  for (let i = 1; i < lines.length; i++) {
+    const [w, c] = lines[i].split(',');
+    if (!w) continue;
+    const isC = c === '1';
+    WORDS.set(w, isC);
+    const s = sig(w);
+    let e = SIGS.get(s);
+    if (!e) SIGS.set(s, (e = { common: [], other: [] }));
+    (isC ? e.common : e.other).push(w);
+  }
+}
+const nextSigs = (s) => { const out = []; for (const c of AZ) { const t = addLetter(s, c); if (SIGS.has(t) && !out.includes(t)) out.push(t); } return out; };
+const depthMemo = new Map();
+function depth(s) {          // words in the longest chain starting at s (including s)
+  if (depthMemo.has(s)) return depthMemo.get(s);
+  let d = 1;
+  for (const t of nextSigs(s)) d = Math.max(d, 1 + depth(t));
+  depthMemo.set(s, d);
+  return d;
+}
+function bestNext(s) {       // deepest next step; prefer everyday words on ties
+  let best = null;
+  for (const t of nextSigs(s)) {
+    const cand = { t, d: depth(t), c: SIGS.get(t).common.length > 0 };
+    if (!best || cand.d > best.d || (cand.d === best.d && cand.c && !best.c)) best = cand;
+  }
+  return best;
+}
+const displayWord = (s) => { const e = SIGS.get(s); return (e.common[0] || e.other[0]); };
+const addedLetter = (from, to) => { const a = [...to]; for (const c of from) a.splice(a.indexOf(c), 1); return a[0]; };
+function fullChain(startWord) {
+  const out = [startWord]; let s = sig(startWord);
+  for (let b = bestNext(s); b; b = bestNext(b.t)) out.push(displayWord(b.t));
+  return out;
+}
+
+// ---------- Target helpers ----------
+const isSub = (a, b) => { const r = [...b]; for (const ch of a) { const i = r.indexOf(ch); if (i < 0) return false; r.splice(i, 1); } return true; };
+const reachMemo = new Map();
+function reaches(s, T) {     // can sig s grow into target sig T?
+  const k = s + '|' + T;
+  if (reachMemo.has(k)) return reachMemo.get(k);
+  let ok = s === T;
+  if (!ok && s.length < T.length && isSub(s, T)) ok = nextSigs(s).some((t) => isSub(t, T) && reaches(t, T));
+  reachMemo.set(k, ok);
+  return ok;
+}
+function routeMap(start, T) {
+  const levels = {}, seen = new Set(), cnt = new Map();
+  const steps = (s) => nextSigs(s).filter((t) => isSub(t, T) && reaches(t, T));
+  const count = (s) => { if (s === T) return 1; if (cnt.has(s)) return cnt.get(s); const n = steps(s).reduce((a, t) => a + count(t), 0); cnt.set(s, n); return n; };
+  const walk = (s) => { if (seen.has(s)) return; seen.add(s); (levels[s.length] = levels[s.length] || []).push(s); if (s !== T) steps(s).forEach(walk); };
+  const s0 = sig(start); walk(s0);
+  return { levels, routes: count(s0) };
+}
+const tSig = () => sig(puzzle.target);
+const onCourse = () => !!puzzle.target && reaches(sig(cur()), tSig());
+const goalLen = () => (puzzle.target ? puzzle.target.length : puzzle.max);
+const freshAnagrams = () => { const c = cur(), e = SIGS.get(sig(c)); return e.common.filter((w) => w !== c && !S.girth.includes(w)); };
+const GIRTH_LINES = ['Thicc.', 'Girthy.', 'Wider, not longer.', "Now that's girth.", 'Built like a soda can.'];
+
+// ---------- Puzzle selection ----------
+const todayIndex = () => Math.floor((Date.now() - EPOCH) / DAY);
+let mode = 'daily';          // 'daily' | 'practice'
+let puzzle;                  // { id, no, start, max }
+function pickDaily(idx = todayIndex()) {
+  const m = location.hash.match(/^#p(\d+)$/);   // #p12 jumps to puzzle 12 for playtesting
+  if (m) idx = parseInt(m[1], 10) - 1;
+  const d = DAILY[((idx % DAILY.length) + DAILY.length) % DAILY.length];
+  return { id: 'd' + idx, idx, no: idx + 1, start: d.start, target: d.target, clue: d.clue, max: depth(sig(d.start)) + 2 };
+}
+function pickPractice() {
+  const start = STARTS[Math.floor(Math.random() * STARTS.length)];
+  return { id: 'practice', no: null, start, target: null, max: depth(sig(start)) + 2 };
+}
+
+// ---------- State ----------
+let S;   // { chain, hinted: [stepIdx], hintsLeft, backupsLeft, done, t0, t1, hintFor }
+let typed = '';
+function newState() { return { chain: [puzzle.start], hinted: [], hintsLeft: HINTS, backupsLeft: BACKUPS, done: false, t0: null, t1: null, hintFor: null, girth: [], hit: false }; }
+function save() { if (mode === 'daily') store.set(puzzle.id, S); }
+function cur() { return S.chain[S.chain.length - 1]; }
+
+// ---------- Shower / Grower ----------
+// Target puzzles: grower = reach the target's length. Practice: halfway from 3 letters to the max.
+const growerAt = (max) => (puzzle && puzzle.target ? puzzle.target.length : 3 + Math.ceil((max - 3) / 2));
+function verdict(len, max) {
+  const g = growerAt(max);
+  if (S && S.hit) return { grower: true, title: 'GROWER · BULLSEYE', line: `Bullseye. It was ${puzzle.target.toUpperCase()}.` };
+  if (len >= max) return { grower: true, title: 'CERTIFIED GROWER', line: 'Went the full length. Legendary.' };
+  if (len >= g) return { grower: true, title: 'GROWER', line: puzzle.target ? 'Missed the target, but that is some impressive length.' : 'Respectable growth. Be proud.' };
+  if ((len - 3) / (g - 3) >= 0.5) return { grower: false, title: 'SHOWER', line: 'Some change, but not a dramatic one.' };
+  return { grower: false, title: 'SHOWER', line: 'What you see is pretty much what you get.' };
+}
+const REACTIONS = ["It's a start.", "Something's happening…", 'Getting bigger.', 'Now we\'re talking.', 'Okay, show-off.', 'Is that even legal?', 'Absolute unit.', 'Somebody stop them.', 'Seek medical attention.'];
+
+// ---------- Rendering ----------
+const $ = (id) => document.getElementById(id);
+function tiles(word, cls = '', extra = {}) {
+  const row = document.createElement('div');
+  row.className = 'row ' + cls;
+  row.style.setProperty('--n', Math.max(word.length, 6));
+  [...word].forEach((ch, i) => {
+    const t = document.createElement('div');
+    t.className = 'tile' + (extra.classes ? ' ' + (extra.classes[i] || '') : '');
+    t.textContent = ch.trim();
+    row.appendChild(t);
+  });
+  return row;
+}
+function render(anim) {
+  const L = $('ladder'); L.innerHTML = '';
+  const sp = document.createElement('div'); sp.className = 'spacer'; L.appendChild(sp);
+  const c = cur();
+  // past words (all but current), highlighting the letter that was added
+  S.chain.forEach((w, i) => {
+    if (i === S.chain.length - 1) return;
+    const prev = S.chain[i - 1];
+    const add = prev ? addedLetter(prev, w) : null;
+    let marked = false;
+    const classes = [...w].map((ch) => (!marked && ch === add ? ((marked = true), 'added') : ''));
+    L.appendChild(tiles(w, 'past' + (S.hinted.includes(i) ? ' hinted' : ''), { classes }));
+  });
+  // current word, dimming letters as they're typed
+  const pool = [...c]; const used = new Array(c.length).fill(false);
+  const inputClasses = [];
+  let newCount = 0;
+  for (const ch of typed) {
+    const j = pool.findIndex((p, k) => p === ch && !used[k]);
+    if (j >= 0) { used[j] = true; inputClasses.push('kept'); }
+    else { newCount++; inputClasses.push(newCount === 1 ? 'new' : 'bad'); }
+  }
+  const lbl = document.createElement('div'); lbl.className = 'label'; lbl.textContent = S.done ? 'Final word' : 'Current word';
+  L.appendChild(lbl);
+  if (!S.done) {
+    const left = freshAnagrams().length;
+    if (left || S.girth.length) {
+      const g = document.createElement('div'); g.className = 'girth';
+      g.textContent = `Girth: ${S.girth.length}` + (left ? ` · ${left} anagram${left > 1 ? 's' : ''} of ${c.toUpperCase()} to find` : '');
+      L.appendChild(g);
+    }
+  }
+  const curRow = tiles(c, 'current' + (anim === 'pop' ? ' pop' : ''), { classes: used.map((u) => (u ? 'used' : '')) });
+  L.appendChild(curRow);
+  if (!S.done) {
+    const lbl2 = document.createElement('div'); lbl2.className = 'label'; lbl2.textContent = 'Add one letter';
+    L.appendChild(lbl2);
+    const slots = (typed + ' '.repeat(Math.max(0, c.length + 1 - typed.length)));
+    const inRow = tiles(slots, 'input' + (anim === 'shake' ? ' shake' : ''), { classes: inputClasses });
+    inRow.id = 'input-row';
+    L.appendChild(inRow);
+    const n = nextSigs(sig(c)).length;
+    const ways = document.createElement('div');
+    ways.className = 'ways' + (n <= 2 ? ' tight' : '');
+    ways.textContent = n === 1 ? 'Only 1 way to grow from here' : `${n} ways to grow from here`;
+    L.appendChild(ways);
+  }
+  L.scrollTop = L.scrollHeight;
+  // clue card
+  $('clue').style.display = puzzle.target ? 'block' : 'none';
+  if (puzzle.target) {
+    const T = puzzle.target, reveal = new Array(T.length).fill('');
+    if (S.done) [...T].forEach((ch, i) => (reveal[i] = ch));
+    else for (const ch of cur()) for (let i = 0; i < T.length; i++) if (!reveal[i] && T[i] === ch) { reveal[i] = ch; break; }
+    $('clue-text').textContent = puzzle.clue;
+    $('clue-len').textContent = `${T.length} letters`;
+    const tr = $('target-row'); tr.innerHTML = '';
+    tr.className = 'row target' + (S.done ? ' solved' : '');
+    reveal.forEach((ch) => { const t = document.createElement('div'); t.className = 'tile' + (ch ? ' on' : ''); t.textContent = ch; tr.appendChild(t); });
+    const co = $('course');
+    if (S.hit) { co.className = 'course on'; co.textContent = 'Bullseye!'; }
+    else if (S.done) { co.className = 'course off'; co.textContent = `It was ${T.toUpperCase()}.`; }
+    else if (onCourse()) { co.className = 'course on'; co.textContent = 'On course: the target is still within reach'; }
+    else { co.className = 'course off'; co.textContent = 'Off course: the target is out of reach. Keep growing anyway.'; }
+  }
+  // meter
+  $('len').textContent = c.length;
+  $('max').textContent = puzzle.target ? goalLen() : puzzle.max;
+  $('max-label').textContent = puzzle.target ? 'target' : 'max';
+  const v = verdict(c.length, puzzle.max), badge = $('badge');
+  const wasGrower = badge.classList.contains('grower');
+  badge.textContent = S.hit ? 'BULLSEYE' : v.grower ? (c.length >= puzzle.max ? 'FULL LENGTH' : 'GROWER') : 'SHOWER';
+  badge.classList.toggle('grower', v.grower);
+  if (anim === 'pop' && (v.grower !== wasGrower || S.hit)) { badge.classList.remove('flip'); void badge.offsetWidth; badge.classList.add('flip'); }
+  $('ruler-line').style.display = puzzle.target ? 'none' : 'block';
+  $('ruler-line').style.left = ((growerAt(puzzle.max) - 0.5) / puzzle.max * 100) + '%';
+  $('scale-mid').textContent = puzzle.target ? '' : v.grower ? 'GROWER ZONE ✓' : `GROWER AT ${growerAt(puzzle.max)} →`;
+  $('scale-end').textContent = puzzle.target ? `TARGET: ${goalLen()} LETTERS` : 'FULL LENGTH';
+  $('ruler').style.setProperty('--tick', `calc(100% / ${goalLen()})`);
+  requestAnimationFrame(() => { $('ruler-fill').style.width = Math.min(100, c.length / goalLen() * 100) + '%'; });
+  // controls
+  $('btn-hint').textContent = `Help (${S.hintsLeft})`;
+  $('btn-hint').disabled = S.done || (S.hintsLeft === 0 && S.hintFor !== S.chain.length);
+  $('btn-back').textContent = `Pull out (${S.backupsLeft})`;
+  $('btn-back').disabled = S.done || S.backupsLeft === 0 || S.chain.length < 2;
+  $('btn-done').disabled = S.done;
+  disarmDone();
+  // keyboard highlight letters in current word
+  document.querySelectorAll('.key[data-k]').forEach((k) => k.classList.toggle('in-word', c.includes(k.dataset.k)));
+  $('subtitle').innerHTML = mode === 'daily' ? `Shower or Grower? #${puzzle.no}` : 'Shower or Grower? <span class="practice-tag">PRACTICE</span>';
+}
+function say(text, kind = '') { const m = $('msg'); m.textContent = text; m.className = 'msg ' + kind; }
+
+// ---------- Keyboard ----------
+function buildKeyboard() {
+  const rows = ['qwertyuiop', 'asdfghjkl', '⏎zxcvbnm⌫'];
+  const kb = $('kb');
+  rows.forEach((r) => {
+    const row = document.createElement('div'); row.className = 'kb-row';
+    for (const ch of r) {
+      const b = document.createElement('button'); b.className = 'key';
+      if (ch === '⏎') { b.textContent = 'Enter'; b.classList.add('wide', 'enter'); b.onclick = submit; }
+      else if (ch === '⌫') { b.textContent = '⌫'; b.classList.add('wide'); b.onclick = backspace; }
+      else { b.textContent = ch; b.dataset.k = ch; b.onclick = () => type(ch); }
+      row.appendChild(b);
+    }
+    kb.appendChild(row);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || document.querySelector('.scrim.open')) return;
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+    else if (e.key === 'Backspace') backspace();
+    else if (/^[a-zA-Z]$/.test(e.key)) type(e.key.toLowerCase());
+  });
+}
+function type(ch) {
+  if (S.done || typed.length >= cur().length + 1) return;
+  if (!S.t0) { S.t0 = Date.now(); save(); }
+  typed += ch; say(''); render();
+}
+function backspace() { if (S.done) return; typed = typed.slice(0, -1); render(); }
+
+// ---------- Game actions ----------
+function submit() {
+  if (S.done) return;
+  const c = cur();
+  if (typed.length === c.length) {           // girth: an anagram of the current word
+    if (typed === c) return fail("That's the word you already have.");
+    if (sig(typed) !== sig(c)) return fail(`For girth, use exactly the letters in ${c.toUpperCase()}.`);
+    if (!WORDS.has(typed)) return fail(`${typed.toUpperCase()} isn't in the dictionary.`);
+    if (S.girth.includes(typed)) return fail('Already found that one.');
+    S.girth.push(typed); typed = '';
+    say(`Girth +1. ${GIRTH_LINES[(S.girth.length - 1) % GIRTH_LINES.length]}`, 'ok');
+    save(); return render('pop');
+  }
+  if (typed.length !== c.length + 1) return fail(`Add one letter to grow, or rearrange ${c.toUpperCase()} for girth.`);
+  const rest = [...typed];
+  for (const ch of c) { const i = rest.indexOf(ch); if (i < 0) return fail(`Use every letter in ${c.toUpperCase()}, plus one.`); rest.splice(i, 1); }
+  if (!WORDS.has(typed)) return fail(`${typed.toUpperCase()} isn't in the dictionary.`);
+  const step = S.chain.length;
+  const wasOn = onCourse();
+  if (S.hintFor === step) S.hinted.push(step);
+  S.hintFor = null;
+  S.chain.push(typed); typed = '';
+  const len = cur().length;
+  if (puzzle.target && sig(cur()) === tSig()) {
+    S.hit = true;
+    say(cur() === puzzle.target ? `Bullseye: ${puzzle.target.toUpperCase()}!` : `Right letters. It was ${puzzle.target.toUpperCase()}!`, 'ok');
+    return finish();
+  }
+  if (len >= puzzle.max) { say('Full length!', 'ok'); return finish(); }
+  if (wasOn && !onCourse()) { say("Off course. The target's out of reach now, but you can still grow.", 'err'); save(); return render('pop'); }
+  if (!nextSigs(sig(cur())).length) { say("That's as big as it gets from here.", 'err'); return finish(); }
+  if (len === growerAt(puzzle.max)) say("You're officially a grower.", 'ok');
+  else say(REACTIONS[Math.min(len - 4, REACTIONS.length - 1)] + (WORDS.get(cur()) ? '' : ' (Fancy word.)'), 'ok');
+  save(); render('pop');
+}
+function fail(text) { say(text, 'err'); render('shake'); }
+function hint() {
+  if (S.done) return;
+  const step = S.chain.length;
+  let b = null;
+  if (onCourse()) { const t = nextSigs(sig(cur())).find((x) => isSub(x, tSig()) && reaches(x, tSig())); if (t) b = { t }; }
+  if (!b) b = bestNext(sig(cur()));
+  if (!b) return;
+  if (S.hintFor !== step) {
+    if (S.hintsLeft <= 0) return;
+    S.hintsLeft--; S.hintFor = step; save();
+  }
+  const L = addedLetter(sig(cur()), b.t);
+  say(`Try adding ${'aefhilmnorsx'.includes(L) ? 'an' : 'a'} ${L.toUpperCase()}.`, 'ok');
+  render();
+}
+function backUp() {
+  if (S.done || S.backupsLeft <= 0 || S.chain.length < 2) return;
+  S.chain.pop(); S.backupsLeft--; S.hintFor = null; typed = '';
+  S.hinted = S.hinted.filter((i) => i < S.chain.length);
+  say(`Pulled out. Back to ${cur().toUpperCase()}.`); save(); render();
+}
+let doneArmed = false, doneTimer;
+function disarmDone() { doneArmed = false; clearTimeout(doneTimer); const b = $('btn-done'); b.classList.remove('armed'); b.textContent = "I'm done"; }
+function callIt() {
+  if (S.done) return;
+  if (!doneArmed) {
+    doneArmed = true; const b = $('btn-done'); b.classList.add('armed'); b.textContent = 'Really done?';
+    doneTimer = setTimeout(disarmDone, 3000); return;
+  }
+  finish();
+}
+function finish() {
+  S.done = true; S.t1 = Date.now(); typed = '';
+  if (mode === 'daily') recordStats();
+  save(); render();
+  setTimeout(showResult, 600);
+}
+
+// ---------- Stats ----------
+function recordStats() {
+  const st = store.get('stats', { played: 0, streak: 0, maxStreak: 0, best: 0, total: 0, last: null, full: 0, growers: 0, dist: {} });
+  st.dist = st.dist || {}; st.growers = st.growers || 0;
+  const idx = parseInt(puzzle.id.slice(1), 10);
+  if (st.last === idx) return;
+  st.played++; st.streak = st.last === idx - 1 ? st.streak + 1 : 1; st.maxStreak = Math.max(st.maxStreak, st.streak);
+  const len = cur().length; st.best = Math.max(st.best, len); st.total += len; st.last = idx;
+  if (len >= puzzle.max) st.full++;
+  if (verdict(len, puzzle.max).grower) st.growers++;
+  if (S.hit) st.hits = (st.hits || 0) + 1;
+  st.dist[len] = (st.dist[len] || 0) + 1;
+  store.set('stats', st);
+}
+function showStats() {
+  const st = store.get('stats', { played: 0, streak: 0, maxStreak: 0, best: 0, total: 0, full: 0, growers: 0, dist: {} });
+  const avg = st.played ? (st.total / st.played).toFixed(1) : '–';
+  const gp = st.played ? Math.round((st.growers || 0) / st.played * 100) + '%' : '–';
+  const hp = st.played ? Math.round((st.hits || 0) / st.played * 100) + '%' : '–';
+  $('stats').innerHTML = [['Played', st.played], ['Stamina<br>(streak)', st.streak], ['Grower<br>rate', gp], ['Bulls-<br>eyes', hp]]
+    .map(([k, v]) => `<div><b>${v}</b><span>${k}</span></div>`).join('');
+  const dist = st.dist || {}; const keys = Object.keys(dist).map(Number);
+  const lo = 3, hi = Math.max(13, ...keys); const top = Math.max(1, ...Object.values(dist));
+  const todayLen = mode === 'daily' && S.done ? cur().length : null;
+  let html = '';
+  for (let L = lo; L <= hi; L++) {
+    const n = dist[L] || 0;
+    html += `<div><span>${L}</span><span class="fill${L === todayLen ? ' today' : ''}" style="width:${8 + (n / top) * 82}%">${n}</span></div>`;
+  }
+  $('dist').innerHTML = st.played ? html : '<p class="sub">Play a daily puzzle to start your chart.</p>';
+  $('btn-daily').style.display = mode === 'practice' ? 'block' : 'none';
+  open('m-stats');
+}
+
+// ---------- Result ----------
+const fmtTime = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+function shareText() {
+  const len = cur().length, v = verdict(len, puzzle.max);
+  const bar = '🟪🟪🟪' + S.chain.slice(1).map((_, i) => (S.hinted.includes(i + 1) ? '🟨' : '🟩')).join('') + '⬜'.repeat(Math.max(0, goalLen() - len));
+  const girth = S.girth.length ? `\nGirth: ${S.girth.length}` : '';
+  const head = mode === 'daily' ? `Shower or Grower? #${puzzle.no}` : 'Shower or Grower? (practice)';
+  const time = S.t0 && S.t1 ? ` · lasted ${fmtTime(S.t1 - S.t0)}` : '';
+  return `${head}\n${v.title} · 3 → ${len} letters${time}\n${bar}${girth}\n${SHARE_URL}`;
+}
+function showResult() {
+  const len = cur().length, v = verdict(len, puzzle.max);
+  $('r-title').textContent = mode === 'daily' ? `Shower or Grower? #${puzzle.no}` : 'Practice round';
+  $('r-verdict').textContent = v.title;
+  $('r-rating').textContent = v.line;
+  $('r-bar').innerHTML = Array.from({ length: Math.max(len, goalLen()) }, (_, i) => {
+    if (i < 3) return '<i class="base"></i>';
+    if (i >= len) return '<i></i>';
+    return `<i class="${S.hinted.includes(i - 2) ? 'hint' : 'gain'}"></i>`;
+  }).join('');
+  const hints = S.hinted.length;
+  $('r-detail').textContent = `Soft: 3 letters → finished at ${len}` + (puzzle.target ? ` (target ${goalLen()})` : ` (max ${puzzle.max})`) + ` · grew ${(len / 3).toFixed(1)}×`
+    + (S.girth.length ? ` · girth ${S.girth.length}` : '')
+    + (hints ? ` · ${hints} help${hints > 1 ? 's' : ''}` : '') + (S.t0 && S.t1 ? ` · lasted ${fmtTime(S.t1 - S.t0)}` : '');
+  const fmtChain = (arr) => arr.map((w) => w.toUpperCase()).join(' <span>→</span> ');
+  $('r-chain').innerHTML = fmtChain(S.chain);
+  $('r-best').innerHTML = fmtChain(fullChain(puzzle.start));
+  $('r-best-wrap').style.display = puzzle.target ? 'none' : 'block';
+  $('r-map-wrap').style.display = puzzle.target ? 'block' : 'none';
+  if (puzzle.target) renderMap();
+  $('r-share').textContent = shareText();
+  $('r-next').textContent = mode === 'daily' ? nextText() : '';
+  open('m-result');
+}
+function renderMap() {
+  const T = tSig(), { levels, routes } = routeMap(puzzle.start, T);
+  const mine = new Map(S.chain.map((w) => [w.length, w]));
+  let offShown = false, html = '';
+  for (let L = 3; L <= puzzle.target.length; L++) {
+    const lv = levels[L] || [], myW = mine.get(L);
+    const items = lv.map((s) => {
+      const e = SIGS.get(s), words = [...e.common, ...e.other].map((w) => w.toUpperCase()).join(' / ');
+      const cls = s === T ? 'goal' : myW && sig(myW) === s ? 'mine' : '';
+      return `<span class="node ${cls}">${words}</span>`;
+    });
+    if (myW && !lv.includes(sig(myW))) { items.push(`<span class="node off">${myW.toUpperCase()} ✗${offShown ? '' : ' you turned off here'}</span>`); offShown = true; }
+    html += `<div class="lvl"><b>${L}</b><div>${items.join('')}</div></div>`;
+  }
+  $('r-map').innerHTML = html;
+  const rt = `${routes} route${routes === 1 ? '' : 's'} from ${puzzle.start.toUpperCase()} to ${puzzle.target.toUpperCase()}.`;
+  $('r-map-sub').textContent = S.hit ? `${rt} Yours is in green.` : offShown ? `${rt} Red is where you went off course.` : `${rt} You stopped at the green one.`;
+}
+function nextText() {
+  const ms = (todayIndex() + 1) * DAY + EPOCH - Date.now();
+  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+  const nd = DAILY[((puzzle.idx + 1) % DAILY.length + DAILY.length) % DAILY.length];
+  return `Tomorrow: a ${nd.target.length}-letter target. New clue in ${h}h ${m}m.`;
+}
+async function copyShare() {
+  const text = shareText(); const b = $('btn-share');
+  try { await navigator.clipboard.writeText(text); b.textContent = 'Copied!'; }
+  catch {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch {}
+    ta.remove(); b.textContent = ok ? 'Copied!' : 'Select the text above to copy';
+  }
+  setTimeout(() => (b.textContent = 'Copy result'), 1800);
+}
+
+// ---------- Modals ----------
+function open(id) { $(id).classList.add('open'); }
+function closeAll() { document.querySelectorAll('.scrim').forEach((s) => s.classList.remove('open')); }
+document.querySelectorAll('.scrim').forEach((s) => s.addEventListener('click', (e) => { if (e.target === s || e.target.closest('[data-close]')) closeAll(); }));
+
+// ---------- Boot ----------
+function startPuzzle(p, m) {
+  mode = m; puzzle = p; typed = '';
+  S = (m === 'daily' && store.get(p.id, null)) || newState();
+  say(S.done ? 'Done for today. Come back tomorrow.' : `Start: ${puzzle.start.toUpperCase()}. Make it grow${puzzle.target ? ' into the target' : ''}.`);
+  render();
+  if (S.done) setTimeout(showResult, 300);
+}
+function helpExample() {
+  const ex = $('help-example'); ex.innerHTML = '';
+  ['ant', 'tans', 'stand', 'stands'].forEach((w, i) => ex.appendChild(tiles(w, i === 3 ? 'current' : 'past', { classes: [] })));
+}
+async function boot() {
+  try {
+    const res = await fetch('words.csv');
+    if (!res.ok) throw new Error(res.status);
+    loadWords(await res.text());
+  } catch (e) {
+    $('loading').textContent = "Couldn't load the dictionary (words.csv). Make sure it's next to this page.";
+    return;
+  }
+  $('loading').style.display = 'none';
+  $('game').style.display = 'flex';
+  buildKeyboard(); helpExample();
+  $('btn-help').onclick = () => open('m-help');
+  $('btn-stats').onclick = showStats;
+  $('btn-hint').onclick = hint;
+  $('btn-back').onclick = backUp;
+  $('btn-done').onclick = callIt;
+  $('btn-share').onclick = copyShare;
+  const practice = () => { closeAll(); startPuzzle(pickPractice(), 'practice'); };
+  $('btn-practice').onclick = practice;
+  $('btn-practice2').onclick = practice;
+  $('btn-daily').onclick = () => { closeAll(); startPuzzle(pickDaily(), 'daily'); };
+  window.addEventListener('hashchange', () => { closeAll(); startPuzzle(pickDaily(), 'daily'); });
+  startPuzzle(pickDaily(), 'daily');
+  if (!store.get('seenHelp', false)) { open('m-help'); store.set('seenHelp', true); }
+}
+boot();
+</script>
+</body>
+</html>

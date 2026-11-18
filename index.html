@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dihdle: Sounds dirty. Think clean.</title>
+<meta name="description" content="A free daily word game. Every clue sounds dirty. Every answer is clean. No account, no app, one puzzle a day.">
+<meta property="og:title" content="Dihdle">
+<meta property="og:description" content="Sounds dirty. Think clean. A free daily word game.">
+<meta property="og:image" content="https://trenttrumpa-code.github.io/dihdle/og.png">
+<meta property="og:url" content="https://trenttrumpa-code.github.io/dihdle/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root { --cream: #fff6db; --yellow: #ffd84d; --lav: #cdbdff; --lav-deep: #8c70e8; --ink: #2b2140; --ink-soft: #6a5f80; --green: #2fa36b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cream); color: var(--ink); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 28px 18px 40px; min-height: 100dvh; display: flex; flex-direction: column; }
+  .display { font-family: "Bricolage Grotesque", system-ui, sans-serif; }
+  header h1 { margin: 0; font-size: 64px; font-weight: 800; letter-spacing: -2px; line-height: .95; }
+  header p { margin: 6px 0 0; font-size: 20px; font-weight: 700; }
+  header p span { color: var(--lav-deep); }
+  .card { margin-top: 26px; border: 2px solid var(--ink); border-radius: 18px; background: #fff; padding: 18px; box-shadow: 0 5px 0 var(--ink); }
+  .kicker { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+  .card h2 { margin: 6px 0 2px; font-size: 30px; font-weight: 800; line-height: 1.05; }
+  .card .how { margin: 0 0 14px; color: var(--ink-soft); font-size: 14px; }
+  .clue { background: var(--cream); border-radius: 12px; padding: 12px 14px; border: 2px dashed var(--ink-soft); }
+  .clue small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 4px; }
+  .clue q { display: block; font-size: 19px; font-weight: 700; line-height: 1.3; quotes: "\201C" "\201D"; }
+  .blanks { display: flex; gap: 4px; margin-top: 10px; }
+  .blanks i { width: 24px; height: 24px; border: 1.5px dashed var(--ink-soft); border-radius: 5px; }
+  .play {
+    display: block; margin-top: 16px; text-align: center; text-decoration: none; color: var(--ink);
+    background: var(--yellow); border: 2px solid var(--ink); border-radius: 12px; padding: 14px; font-weight: 800; font-size: 18px;
+  }
+  .play:active { transform: translateY(2px); }
+  .played { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: #e9f8ee; border: 1.5px solid var(--green); font-weight: 700; font-size: 14px; display: none; }
+  .soon { margin-top: 16px; border: 2px dashed var(--ink-soft); border-radius: 18px; padding: 14px 18px; color: var(--ink-soft); }
+  .soon b { color: var(--ink); }
+  footer { margin-top: auto; padding-top: 28px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+  .noscript { margin-top: 20px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 class="display">Dihdle</h1>
+    <p>Sounds dirty. <span>Think clean.</span></p>
+  </header>
+
+  <section class="card">
+    <div class="kicker"><span id="no">Today's daily</span><span id="countdown"></span></div>
+    <h2 class="display">Shower or Grower?</h2>
+    <p class="how">Grow a 3-letter word, one letter at a time, until it becomes today's secret object.</p>
+    <div class="clue">
+      <small>Today's clue · <span id="len"></span> letters</small>
+      <q id="clue">Loading today's clue…</q>
+      <div class="blanks" id="blanks"></div>
+    </div>
+    <div class="played" id="played"></div>
+    <a class="play" id="play" href="shower-or-grower/">Play today's puzzle</a>
+  </section>
+
+  <section class="soon">
+    <b>More games are on the way.</b> One new puzzle drops every day at midnight UTC. No account, no app.
+  </section>
+
+  <noscript><p class="noscript">Dihdle needs JavaScript turned on to play.</p></noscript>
+
+  <footer>Dihdle · Every clue sounds dirty. Every answer is clean.</footer>
+</div>
+<script>
+  const DAILY = [{"start":"art","target":"toaster","clue":"Slide two in, push down, and wait for the pop."},{"start":"gel","target":"plunger","clue":"Push it in, pull it out, and keep going until things start flowing."},{"start":"ace","target":"candles","clue":"Long, stiff, and they start dripping once things heat up."},{"start":"set","target":"rockets","clue":"Long, upright, and over in seconds once they go off."},{"start":"lad","target":"ladders","clue":"Spread their legs, climb on, and try not to fall off."},{"start":"ape","target":"stapler","clue":"Slam it down hard and somebody's getting pinned."},{"start":"gin","target":"caulking","clue":"Squeeze the tube and fill every last crack."},{"start":"lie","target":"pickles","clue":"Long, bumpy, and they've been soaking in juice for weeks."},{"start":"sea","target":"harness","clue":"Strap in tight. It's going to be a wild ride."},{"start":"ate","target":"mattress","clue":"Sees the most action in the house, and it's always on its back."},{"start":"nit","target":"pistons","clue":"Pumping in and out all day just to keep things running."},{"start":"pen","target":"sponges","clue":"Give them a squeeze and they get wet all over."},{"start":"gas","target":"sausages","clue":"Thick, juicy, and best straight off the grill."},{"start":"ace","target":"peaches","clue":"Soft, round, a little fuzzy, and best when perfectly ripe."}];
+  const EPOCH = Date.UTC(2026, 10, 18), DAY = 86400000;   // keep in sync with the game
+  const idx = Math.floor((Date.now() - EPOCH) / DAY);
+  const d = DAILY[((idx % DAILY.length) + DAILY.length) % DAILY.length];
+  document.getElementById('no').textContent = `Daily #${idx + 1}`;
+  document.getElementById('clue').textContent = d.clue;
+  document.getElementById('len').textContent = d.target.length;
+  document.getElementById('blanks').innerHTML = '<i></i>'.repeat(d.target.length);
+
+  function tick() {
+    const ms = (idx + 1) * DAY + EPOCH - Date.now();
+    if (ms <= 0) return location.reload();
+    const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+    document.getElementById('countdown').textContent = `New clue in ${h}h ${m}m`;
+  }
+  tick(); setInterval(tick, 30000);
+
+  // If today's puzzle is already finished in this browser, show the result.
+  try {
+    const st = JSON.parse(localStorage.getItem('sog2:d' + idx) || 'null');
+    if (st && st.done) {
+      const len = st.chain[st.chain.length - 1].length;
+      const p = document.getElementById('played');
+      p.textContent = st.hit ? `You played today: bullseye at ${len} letters.` : `You played today: ${len} letters. The answer is waiting.`;
+      p.style.display = 'block';
+      document.getElementById('play').textContent = 'See your result';
+    }
+  } catch {}
+</script>
+</body>
+</html>
